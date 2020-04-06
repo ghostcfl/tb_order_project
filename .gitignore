@@ -1,4 +1,5 @@
 /.idea
-/chrome-win
+/core/browser/chrome-win
 settings.py
 /tools/log.log
+test.py
