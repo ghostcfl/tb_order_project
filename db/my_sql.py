@@ -1,6 +1,6 @@
 import pymysql
 from pymysql.err import OperationalError, Error
-from tools.tools import my_sleep
+from tools.tools_method import my_sleep
 
 from settings import PROD_SERVER
 from tools.logger import logger
@@ -139,6 +139,7 @@ class MySql(object):
                         return None
                     else:
                         result = self._dict_cursor.fetchall()
+                        self._con.commit()
                         break
             else:
                 while True:
@@ -154,6 +155,7 @@ class MySql(object):
                         return None
                     else:
                         result = self._con.fetchall()
+                        self._con.commit()
                         break
         except KeyError:
             while True:
@@ -169,6 +171,7 @@ class MySql(object):
                     return None
                 else:
                     result = self._cursor.fetchall()
+                    self._con.commit()
                     break
         try:
             assert type(kwargs["return_one"]) is bool, "return_one的数据类型必需是bool类型"
@@ -215,13 +218,13 @@ class MySql(object):
 
         try:
             assert type(kwargs['set']) is dict, "set的数据类型必需是字典(dict)"
-            set_str = concat(kwargs['set'], ",")
+            set_str = self.concat(kwargs['set'], ",")
         except KeyError:
             pass
 
         try:
             assert type(kwargs["c"]) is dict, "c的数据类型必需是字典"
-            condition = concat(kwargs['c'], " and ")
+            condition = self.concat(kwargs['c'], " and ")
         except KeyError:
             pass
 
@@ -351,7 +354,7 @@ class MySql(object):
 
         try:
             assert type(kwargs["c"]) is dict, "c的数据类型必需是字典"
-            condition = concat(kwargs['c'], " and ")
+            condition = self.concat(kwargs['c'], " and ")
         except KeyError:
             pass
 
@@ -393,9 +396,13 @@ class MySql(object):
 
 
 if __name__ == '__main__':
-    from settings import LOCAL_SERVER
+    from settings import TEST_SERVER_DB_TEST
 
-    ms = MySql(LOCAL_SERVER)
+    ms = MySql(db_setting=TEST_SERVER_DB_TEST)
+    while 1:
 
-    ms.print_get_help(t="shop_info")
+        my_sleep(5)
+        verify_code = ms.get_one(sql="select verify_code from phone_verify where id='59' limit 1000")
+        print(verify_code)
+    # ms.print_get_help(t="shop_info")
     # print()
