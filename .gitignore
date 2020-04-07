@@ -4,3 +4,4 @@ settings.py
 /tools/log.log
 test.py
 /chrome-win
+*.json
