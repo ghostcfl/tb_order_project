@@ -1,3 +1,4 @@
+import asyncio
 import datetime
 import re
 import requests
@@ -22,27 +23,30 @@ class OrderListPageSpider(BaseSpider):
                 logger.error("KeyError")
 
     async def get_page(self, page_num):
+        self.completed = 0
+        try:
+            await self.page.waitForSelector(".pagination-options-go")
+            await self.page.focus(".pagination-options input")
+            for _ in range(3):
+                await self.page.keyboard.press("Delete")
+                await self.page.keyboard.press("Backspace")
+            await self.page.setRequestInterception(True)
+            self.page.on('request', self.intercept_request)
+            self.page.on('response', self.intercept_response)
+            await self.page.type(".pagination-options input", str(page_num))
+            await self.page.keyboard.press("Enter")
+            restart = await self.login.slider(self.page)
+            if restart:
+                exit("滑块验证码失败，退出")
+            self.page.waitForSelector(
+                ".pagination-item.pagination-item-" + str(page_num) + ".pagination-item-active",
+                timeout=10000)
+        except Exception as e:
+            logger.info(e)
         while 1:
-            try:
-                await self.page.waitForSelector(".pagination-options-go")
-                await self.page.focus(".pagination-options input")
-                for _ in range(3):
-                    await self.page.keyboard.press("Delete")
-                    await self.page.keyboard.press("Backspace")
-                await self.page.setRequestInterception(True)
-                self.page.on('request', self.intercept_request)
-                self.page.on('response', self.intercept_response)
-                await self.page.type(".pagination-options input", str(page_num))
-                await self.page.keyboard.press("Enter")
-                restart = await self.login.slider(self.page)
-                if restart:
-                    exit("滑块验证码失败，退出")
-                self.page.waitForSelector(
-                    ".pagination-item.pagination-item-" + str(page_num) + ".pagination-item-active",
-                    timeout=10000)
-            except Exception as e:
-                logger.info(e)
-            await asyncio.sleep(600)
+            if self.completed:
+                return self.completed
+            await asyncio.sleep(2)
 
     async def parse(self, main_orders, page_num):
         # print(main_orders)
@@ -70,10 +74,9 @@ class OrderListPageSpider(BaseSpider):
             date_limit = (date - datetime.timedelta(eoc)).strftime("%Y-%m-%d %H:%M:%S")
             if tb_order_item.createTime < date_limit:
                 logger.info("完成本轮爬取，共翻 " + str(page_num) + " 页。")
-                loop_control = 1
-                break
-        if loop_control:
-            pass
+                self.completed = 2
+                return
+        self.completed = 1
 
     async def parse_order_item(self, i, main_orders):
         tb_order_item = TBOrderItem()
@@ -82,8 +85,8 @@ class OrderListPageSpider(BaseSpider):
         tb_order_item.buyerName = main_orders[i]['buyer']['nick']
         flag = main_orders[i]['extra']['sellerFlag']
         tb_order_item.actualFee = main_orders[i]['payInfo']['actualFee']
-        tb_order_item.deliverFee = re.search("\(含快递:￥(\d+\.\d+)\)", main_orders[i]['payInfo']['postType']).group(1)
-        tb_order_item.deliverURL = "https:" + main_orders[i]['statusInfo']['operations'][0]['url']
+        tb_order_item.deliverFee = re.search(r"\(含快递:￥(\d+\.\d+)\)", main_orders[i]['payInfo']['postType']).group(1)
+        tb_order_item.detailURL = "https:" + main_orders[i]['statusInfo']['operations'][0]['url']
         tb_order_item.orderStatus = main_orders[i]['statusInfo']['text']
         tb_order_item.fromStore = self.fromStore
         tb_order_item.updateTime = time_format("%Y-%d-%m %H:%M:%S")
@@ -98,7 +101,8 @@ class OrderListPageSpider(BaseSpider):
         tb_order_item.save()
         return sub_orders, tb_order_item
 
-    async def parse_order_detail_item(self, continue_code, i, main_orders, sub_orders, tb_order_item):
+    @staticmethod
+    async def parse_order_detail_item(continue_code, i, main_orders, sub_orders, tb_order_item):
         for j in range(len(sub_orders)):
             tb_order_detail_item = TBOrderDetailItem()
             tb_order_detail_item.orderNo = main_orders[i]["id"]
@@ -160,7 +164,6 @@ class OrderListPageSpider(BaseSpider):
 
 
 if __name__ == '__main__':
-    import asyncio
     from core.browser.login_tb import LoginTB
     from settings import STORE_INFO
 
