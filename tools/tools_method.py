@@ -1,3 +1,4 @@
+import re
 import time
 import datetime
 
@@ -61,4 +62,13 @@ def format_attribute(attriblue_list):
         return temp_ga.replace("（", "(").replace("）", ")")
 
 
-
+def status_format(string):
+    list_name = ["等待买家付款", "买家已付款", "交易关闭", "已发货", "交易成功"]
+    for i in list_name:
+        a = re.search(i, string)
+        if a:
+            if a.group() == "已发货":
+                temp = "卖家已发货"
+            else:
+                temp = a.group()
+            return temp
