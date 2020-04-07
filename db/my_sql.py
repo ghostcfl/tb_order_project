@@ -2,7 +2,7 @@ import pymysql
 from pymysql.err import OperationalError, Error
 from tools.tools_method import my_sleep
 
-from settings import PROD_SERVER
+from settings import MAIN_SQL_SETTING
 from tools.logger import logger
 
 
@@ -12,7 +12,7 @@ class MySql(object):
     _con = None
 
     def __init__(self, db_setting=None):
-        db_setting = db_setting if db_setting else PROD_SERVER
+        db_setting = db_setting if db_setting else MAIN_SQL_SETTING
         while 1:
             try:
                 self._con = pymysql.connect(**db_setting)
