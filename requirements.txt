@@ -1,3 +1,4 @@
 pymysql
 loguru
 pyppeteer
+requests
