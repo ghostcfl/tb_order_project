@@ -1,7 +1,16 @@
 from db.my_sql import MySql
 
 
-class TBOrderItem(object):
+class BaseItem(object):
+    def _pop_null_value(self):
+        data = self.__dict__.copy()
+        for key in list(data.keys()):
+            if data.get(key) is None:
+                data.pop(key)
+        return data
+
+
+class TBOrderItem(BaseItem):
     def __init__(self, **kwargs):
         self.orderNo = kwargs.get('orderNo')
         self.createTime = kwargs.get('createTime')
@@ -11,7 +20,6 @@ class TBOrderItem(object):
         self.isPhoneOrder = kwargs.get('isPhoneOrder')
         self.actualFee = kwargs.get('actualFee')
         self.deliverFee = kwargs.get('deliverFee')
-        self.deliverURL = kwargs.get('deliverURL')
         self.detailURL = kwargs.get('detailURL')
         self.orderStatus = kwargs.get('orderStatus')
         self.couponPrice = kwargs.get('couponPrice')
@@ -27,7 +35,6 @@ class TBOrderItem(object):
         self.updateTime = kwargs.get('updateTime')
         self.isDetaildown = kwargs.get('isDetaildown')
         self.isVerify = kwargs.get('isVerify')
-        self.importDate = kwargs.get('importDate')
 
     def __str__(self):
         return str(self.__dict__)
@@ -42,18 +49,18 @@ class TBOrderItem(object):
 
     def save(self):
         ms = MySql()
-        data = self.__dict__
+        data = self._pop_null_value()
         condition = self._condition()
         res = ms.get(t=self._table_name(), c=condition)
         if res:
-            # ms.update(t=self._table_name(), set=data, c=condition)
-            ms.print_update_sql(t=self._table_name(), set=data, c=condition)
+            ms.update(t=self._table_name(), set=data, c=condition)
+            # ms.print_update_sql(t=self._table_name(), set=data, c=condition)
         else:
-            # ms.insert(t=self._table_name(), d=data)
-            ms.print_insert_sql(t=self._table_name(), d=data)
+            ms.insert(t=self._table_name(), d=data)
+            # ms.print_insert_sql(t=self._table_name(), d=data)
 
 
-class TBOrderDetailItem(object):
+class TBOrderDetailItem(BaseItem):
     def __init__(self, **kwargs):
         self.orderNo = kwargs.get('orderNo')
         self.itemNo = kwargs.get('itemNo')
@@ -67,8 +74,6 @@ class TBOrderDetailItem(object):
         self.unitBenefits = kwargs.get('unitBenefits')
         self.isRefund = kwargs.get('isRefund')
         self.refundStatus = kwargs.get('refundStatus')
-        self.updateTime = kwargs.get('updateTime')
-        self.importDate = kwargs.get('importDate')
 
     def __str__(self):
         return str(self.__dict__)
@@ -83,13 +88,18 @@ class TBOrderDetailItem(object):
 
     def save(self):
         ms = MySql()
-        data = self.__dict__
+        data = self._pop_null_value()
         condition = self._condition()
         res = ms.get(t=self._table_name(), c=condition)
         if res:
             data.pop("goodsCode")
-            # ms.update(t=self._table_name(), set=data, c=condition)
-            ms.print_update_sql(t=self._table_name(), set=data, c=condition)
+            ms.update(t=self._table_name(), set=data, c=condition)
+            # ms.print_update_sql(t=self._table_name(), set=data, c=condition)
         else:
-            # ms.insert(t=self._table_name(), d=data)
-            ms.print_insert_sql(t=self._table_name(), d=data)
+            ms.insert(t=self._table_name(), d=data)
+            # ms.print_insert_sql(t=self._table_name(), d=data)
+
+
+if __name__ == '__main__':
+    i = TBOrderDetailItem(itemNo=2, unitPrice=0, orderNo="")
+    i.pop_null_value()
