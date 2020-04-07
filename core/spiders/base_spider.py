@@ -1,4 +1,6 @@
 class BaseSpider(object):
+    completed = 0
+
     def __init__(self, login, browser, page, fromStore):
         self.login = login
         self.browser = browser
