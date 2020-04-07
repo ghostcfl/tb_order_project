@@ -239,9 +239,26 @@ class LoginTB(object):
             await frame.type(PHONE_CHECK_INPUT[1], verify_code, {'delay': self.input_time_random() - 50})
             await frame.click(PHONE_SUBMIT_BTN[1])
 
+    @staticmethod
+    async def get_cookie(page):
+        """获取登录后cookie"""
+        cookies_list = await page.cookies()
+        cookies = ''
+        for cookie in cookies_list:
+            str_cookie = '{0}={1};'
+            str_cookie = str_cookie.format(cookie.get('name'), cookie.get('value'))
+            cookies += str_cookie
+        return cookies
+
+    @classmethod
+    async def run(cls, **kwargs):
+        lt = LoginTB()
+        b, p, f = await lt.do_login(**kwargs)
+        return lt, b, p, f
+
 
 if __name__ == '__main__':
-    from settings import STORE_YJ
+    from settings import STORE_KY
 
-    lt = LoginTB()
-    asyncio.get_event_loop().run_until_complete(lt.do_login(**STORE_YJ))
+    # lt = LoginTB()
+    asyncio.get_event_loop().run_until_complete(LoginTB.run(**STORE_KY))
