@@ -23,6 +23,11 @@ class LoginTB(object):
         self.page = p[0]
         await self.page.setViewport({"width": WIDTH, "height": HEIGHT})
 
+    async def new_page(self):
+        page = await self.browser.newPage()
+        await page.setViewport({"width": WIDTH, "height": HEIGHT})
+        return page
+
     async def do_login(self, **kwargs):
         await self.set_page(**kwargs)
         while 1:
