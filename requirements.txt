@@ -2,3 +2,4 @@ pymysql
 loguru
 pyppeteer
 requests
+jsonpath
