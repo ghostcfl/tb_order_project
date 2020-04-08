@@ -12,6 +12,7 @@ class MySql(object):
     _con = None
 
     def __init__(self, db_setting=None):
+        # logger.info("打开数据库连接")
         db_setting = db_setting if db_setting else MAIN_SQL_SETTING
         while 1:
             try:
@@ -25,6 +26,7 @@ class MySql(object):
                 break
 
     def __del__(self):
+        # logger.info("关闭数据库连接")
         self._cursor.close()
         self._dict_cursor.close()
         self._con.close()
@@ -182,11 +184,21 @@ class MySql(object):
         except KeyError:
             return result
 
+    @classmethod
+    def cls_get(cls, **kwargs):
+        ms = MySql()
+        return ms.get(**kwargs)
+
     def get_one(self, **kwargs):
         return self.get(return_one=True, **kwargs)
 
     def get_dict(self, **kwargs):
         return self.get(dict_result=True, **kwargs)
+
+    @classmethod
+    def cls_get_dict(cls, **kwargs):
+        ms = MySql()
+        return ms.get_dict(**kwargs)
 
     def print_get_sql(self, **kwargs):
         self.get(only_sql=True, **kwargs)
@@ -396,13 +408,13 @@ class MySql(object):
 
 
 if __name__ == '__main__':
-    from settings import TEST_SERVER_DB_TEST
-
-    ms = MySql(db_setting=TEST_SERVER_DB_TEST)
-    while 1:
-
-        my_sleep(5)
-        verify_code = ms.get_one(sql="select verify_code from phone_verify where id='59' limit 1000")
-        print(verify_code)
+    pass
+    # from settings import TEST_SERVER_DB_TEST
+    #
+    # ms = MySql(db_setting=TEST_SERVER_DB_TEST)
+    # while 1:
+    #     my_sleep(5)
+    #     verify_code = ms.get_one(sql="select verify_code from phone_verify where id='59' limit 1000")
+    #     print(verify_code)
     # ms.print_get_help(t="shop_info")
     # print()
