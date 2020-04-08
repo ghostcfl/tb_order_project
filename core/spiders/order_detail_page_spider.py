@@ -18,10 +18,12 @@ class OrderDetailPageSpider(BaseSpider):
     async def get_page(self):
 
         pages = await self.browser.pages()
-        if len(pages) < 2:
+        for page in pages:
+            if re.search(r"trade_order_detail.htm", page.url):
+                self.detail_page = page
+                break
+        if not self.detail_page:
             self.detail_page = await self.login.new_page()
-        else:
-            self.detail_page = pages[1]
 
         results = MySql.cls_get_dict(t="tb_order_spider",
                                      cn=["detailURL", "orderNo"],
