@@ -5,3 +5,4 @@ settings.py
 test.py
 /chrome-win
 *.json
+/userdata
