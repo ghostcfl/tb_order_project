@@ -8,33 +8,33 @@ from core.spiders.base_spider import BaseSpider
 from model import TBOrderItem, TBOrderDetailItem
 from db.my_sql import MySql
 from tools.logger import logger
-from tools.tools_method import store_trans, status_format
+from tools.tools_method import store_trans, status_format,my_sleep
+from tools.verify import verify
 
 
 class OrderDetailPageSpider(BaseSpider):
     detail_page = None
 
     async def get_page(self):
+
         pages = await self.browser.pages()
         if len(pages) < 2:
             self.detail_page = await self.login.new_page()
         else:
             self.detail_page = pages[1]
 
-        ms = MySql()
-        results = ms.get_dict(t="tb_order_spider",
-                              cn=["detailURL", "orderNo"],
-                              c={"isDetaildown": 0, "fromStore": self.fromStore},
-                              o=["createTime"], om="d")
+        results = MySql.cls_get_dict(t="tb_order_spider",
+                                     cn=["detailURL", "orderNo"],
+                                     c={"isDetaildown": 0, "fromStore": self.fromStore},
+                                     o=["createTime"], om="d")
         for result in results:
-            tb_order_item = TBOrderItem()
+            ms = MySql()
+            tb_order_item = TBOrderItem(**result)
             logger.info(store_trans(self.fromStore))
             logger.info("开始订单 " + result["orderNo"] + " 详情爬取")
-            tb_order_item.orderNo = result['orderNo']
-            url = result['detailURL']
             while 1:
                 try:
-                    await self.detail_page.goto(url)
+                    await self.detail_page.goto(tb_order_item.detailURL)
                 except errors.PageError:
                     return 1
                 except errors.TimeoutError:
@@ -52,9 +52,9 @@ class OrderDetailPageSpider(BaseSpider):
             content = await self.detail_page.content()
             a = re.search(r"var data = JSON.parse\('(.*)'\);", content).group(1)
             a = a.encode("gbk").decode("unicode_escape")
-            b = a.replace('\\\\\\"', '')
-            data = b.replace('\\"', '"')
-            m = json.loads(data)
+            # b = a.replace('\\\\\\"', '')
+            # data = b.replace('\\"', '"')
+            m = json.loads(a)
             # tb_order_item.actualFee = m['mainOrder']['payInfo']['actualFee']['value']
             tb_order_item.actualFee = jsonpath(m, '$..actualFee.value')[0]
             tb_order_item.orderStatus = status_format(jsonpath(m, '$..statusInfo.text')[0])
@@ -88,8 +88,28 @@ class OrderDetailPageSpider(BaseSpider):
             tb_order_item.receiverName = rec_info.split("，")[0].replace(" ", "")
             tb_order_item.receiverPhone = rec_info.split("，")[1]
             tb_order_item.receiverAddress = "".join(rec_info.split("，")[2:])
-            print(tb_order_item)
-            input()
+            tb_order_item.save(ms)
+            print(tb_order_item.__str__())
+            sub_orders = m['mainOrder']['subOrders']
+            for i in range(len(sub_orders)):
+                tb_order_detail_item = TBOrderDetailItem(orderNo=orderNo)
+                temp = 0
+                tb_order_detail_item.itemNo = i
+                if sub_orders[i]['promotionInfo']:
+                    for j in sub_orders[i]['promotionInfo']:
+                        for x in j['content']:
+                            for k, v in x.items():
+                                if k == 'value':
+                                    f_prom = re.match("Exercise", v)
+                                    p_list = re.findall("-?\d+\.\d+", v)
+                                    if p_list and not f_prom:
+                                        temp += float(p_list.pop())
+                tb_order_detail_item.unitBenefits = temp
+                print(tb_order_detail_item.__str__())
+                tb_order_detail_item.save(ms)
+            del ms
+            my_sleep(random_sleep=True)
+        verify()
 
     @staticmethod
     async def get_coupon(m):
