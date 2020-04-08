@@ -50,6 +50,8 @@ class OrderListPageSpider(BaseSpider):
 
     async def parse(self, main_orders, page_num):
         # print(main_orders)
+        global ms
+        ms = MySql()
         t = time_zone(["08:00", "20:00", "23:59"])
         a = datetime.datetime.now()
         if a < t[0]:
@@ -74,11 +76,19 @@ class OrderListPageSpider(BaseSpider):
             date_limit = (date - datetime.timedelta(eoc)).strftime("%Y-%m-%d %H:%M:%S")
             if tb_order_item.createTime < date_limit:
                 logger.info("完成本轮爬取，共翻 " + str(page_num) + " 页。")
+
+                ms.update(t="tb_order_spider", set={"isDetaildown": 0},
+                          c={"isDetaildown": 2, "fromStore": self.fromStore})
+                ms.update(t="tb_order_spider", set={"isVerify": 0},
+                          c={"isVerify": 2, "fromStore": self.fromStore})
                 self.completed = 2
+                del ms
                 return
         self.completed = 1
+        del ms
 
     async def parse_order_item(self, i, main_orders):
+        global ms
         tb_order_item = TBOrderItem()
         tb_order_item.orderNo = main_orders[i]["id"]
         tb_order_item.createTime = main_orders[i]['orderInfo']['createTime']
@@ -98,11 +108,12 @@ class OrderListPageSpider(BaseSpider):
         except KeyError:
             pass
         sub_orders = main_orders[i]['subOrders']
-        tb_order_item.save()
+        tb_order_item.save(ms)
         return sub_orders, tb_order_item
 
     @staticmethod
     async def parse_order_detail_item(continue_code, i, main_orders, sub_orders, tb_order_item):
+        global ms
         for j in range(len(sub_orders)):
             tb_order_detail_item = TBOrderDetailItem()
             tb_order_detail_item.orderNo = main_orders[i]["id"]
@@ -144,12 +155,13 @@ class OrderListPageSpider(BaseSpider):
                             ms.delete(t="tb_order_detail_spider", c=delete_item)
                         sql = "UPDATE tb_order_detail_spider SET itemNo=itemNo-1 " \
                               "WHERE orderNo='{}' " \
-                              "AND itemNo>'{}'".format(tb_order_detail_item.orderNo, tb_order_detail_item.itemNo)
+                              "AND itemNo>'{}'".format(tb_order_detail_item.orderNo,
+                                                       tb_order_detail_item.itemNo)
                         ms.update(sql=sql)
                         pass
             if continue_code:
                 continue
-            tb_order_detail_item.save()
+            tb_order_detail_item.save(ms)
 
     async def get_flag_text(self, data_url):
         cookies = await self.login.get_cookie(self.page)
