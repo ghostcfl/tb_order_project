@@ -1,19 +1,23 @@
 import re
 import time
 import datetime
+import random
 
 
 def time_format(format_string):
     return datetime.datetime.now().strftime(format_string)
 
 
-def my_sleep(seconds=60):
+def my_sleep(seconds=60, random_sleep=None):
+    if random_sleep:
+        seconds = random.uniform(1, seconds)
     print(time_format("%Y-%d-%m %H:%M:%S") + " | ", end="", flush=True)
-    for _ in range(int(seconds)):
+    while seconds > 1:
         time.sleep(1)
         print(">", end="", flush=True)
+        seconds -= 1
     print("")
-    time.sleep(1)
+    time.sleep(seconds)
 
 
 def time_zone(args):
