@@ -1,10 +1,35 @@
-class BaseItem(object):
+import abc
+
+
+class BaseItem(abc.ABC):
+    def __str__(self):
+        return str(self.__dict__)
+
     def _pop_null_value(self):
         data = self.__dict__.copy()
         for key in list(data.keys()):
             if data.get(key) is None:
                 data.pop(key)
         return data
+
+    @abc.abstractmethod
+    def _condition(self):
+        pass
+
+    @staticmethod
+    def _table_name():
+        pass
+
+    def save(self, ms):
+        data = self._pop_null_value()
+        condition = self._condition()
+        res = ms.get(t=self._table_name(), c=condition)
+        if res:
+            ms.update(t=self._table_name(), set=data, c=condition)
+            # ms.print_update_sql(t=self._table_name(), set=data, c=condition)
+        else:
+            ms.insert(t=self._table_name(), d=data)
+            # ms.print_insert_sql(t=self._table_name(), d=data)
 
 
 class TBOrderItem(BaseItem):
@@ -33,9 +58,6 @@ class TBOrderItem(BaseItem):
         self.isDetaildown = kwargs.get('isDetaildown')
         self.isVerify = kwargs.get('isVerify')
 
-    def __str__(self):
-        return str(self.__dict__)
-
     def _condition(self):
         condition = {"orderNo": self.orderNo}
         return condition
@@ -43,17 +65,6 @@ class TBOrderItem(BaseItem):
     @staticmethod
     def _table_name():
         return "tb_order_spider"
-
-    def save(self, ms):
-        data = self._pop_null_value()
-        condition = self._condition()
-        res = ms.get(t=self._table_name(), c=condition)
-        if res:
-            ms.update(t=self._table_name(), set=data, c=condition)
-            # ms.print_update_sql(t=self._table_name(), set=data, c=condition)
-        else:
-            ms.insert(t=self._table_name(), d=data)
-            # ms.print_insert_sql(t=self._table_name(), d=data)
 
 
 class TBOrderDetailItem(BaseItem):
@@ -70,9 +81,6 @@ class TBOrderDetailItem(BaseItem):
         self.unitBenefits = kwargs.get('unitBenefits')
         self.isRefund = kwargs.get('isRefund')
         self.refundStatus = kwargs.get('refundStatus')
-
-    def __str__(self):
-        return str(self.__dict__)
 
     def _condition(self):
         condition = {"orderNo": self.orderNo, "itemNo": self.itemNo}
@@ -96,6 +104,38 @@ class TBOrderDetailItem(BaseItem):
             # ms.print_insert_sql(t=self._table_name(), d=data)
 
 
+class PriceTBItem(BaseItem):
+    def __init__(self, **kwargs):
+        self.stockid = kwargs.get('stockid')
+        self.link_id = kwargs.get('link_id')
+        self.attribute = kwargs.get('attribute')
+        self.skuId = kwargs.get('skuId')
+        self.shop_id = kwargs.get('shop_id')
+        self.typeabbrev = kwargs.get('typeabbrev')
+        self.price_tb = kwargs.get('price_tb')
+        self.currabrev = kwargs.get('currabrev', "CNY")
+        self.operator = kwargs.get('operator')
+        self.last_time = kwargs.get('last_time')
+        self.flag = kwargs.get('flag')
+        self.freight = kwargs.get('freight')
+        self.ratio = kwargs.get('ratio')
+        self.promotionprice = kwargs.get('promotionprice')
+        self.sales = kwargs.get('sales')
+        self.rates = kwargs.get('rates')
+        self.package_number = kwargs.get('package_number')
+        self.description = kwargs.get('description')
+        self.SpiderDate = kwargs.get('SpiderDate')
+
+    @staticmethod
+    def _table_name():
+        return "prices_tb"
+
+    def _condition(self):
+        condition = {"stockid": self.stockid, "link_id": self.link_id, "shop_id": self.shop_id}
+        return condition
+
+
 if __name__ == '__main__':
-    i = TBOrderDetailItem(itemNo=2, unitPrice=0, orderNo="")
-    i.pop_null_value()
+    pass
+    # i = TBOrderDetailItem(itemNo=2, unitPrice=0, orderNo="")
+    # i.pop_null_value()
