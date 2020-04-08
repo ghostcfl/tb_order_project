@@ -5,7 +5,7 @@ from pyppeteer import errors
 
 from settings import LAUNCH_SETTING, WIDTH, HEIGHT, S_T_P_L, P_I, U_I, MAIL_RECEIVERS, CAPTCHA
 from settings import CAPTCHA_ERROR, CAPTCHA_ERROR_CLICK, LOGIN_SUBMIT, TEST_SERVER_DB_TEST
-from settings import PHONE_CHECK_INPUT, PHONE_GET_CODE, PHONE_SUBMIT_BTN
+from settings import PHONE_CHECK_INPUT, PHONE_GET_CODE, PHONE_SUBMIT_BTN, CAPTCHA_SUCCESS
 from tools.tools_method import my_sleep
 from tools.logger import logger
 from tools.mail import mail
@@ -155,22 +155,19 @@ class LoginTB(object):
                         await asyncio.sleep(2)
                         await frame.click(CAPTCHA_ERROR_CLICK)
                         break
-                    except errors.TimeoutError:
-                        await asyncio.sleep(1)
-                        slider = await self.check_captcha(frame)
-                        if not slider:
-                            logger.info("滑动成功1")
-                            frame = await self.get_nc_frame(frames)
-                            if not frame:
-                                return 0
-                    except errors.PageError:
-                        await asyncio.sleep(1)
-                        slider = await self.check_captcha(frame)
-                        if not slider:
-                            logger.info("滑动成功2")
-                            frame = await self.get_nc_frame(frames)
-                            if not frame:
-                                return 0
+                    except Exception as e:
+                        try:
+                            frame.waitForSelector(CAPTCHA_SUCCESS, timeout=10000)
+                        except Exception as e:
+                            break
+                        else:
+                            await asyncio.sleep(1)
+                            slider = await self.check_captcha(frame)
+                            if not slider:
+                                logger.info("滑动成功1")
+                                frame = await self.get_nc_frame(frames)
+                                if not frame:
+                                    return 0
 
     async def phone_verify(self, page, fromStore):
         try:
