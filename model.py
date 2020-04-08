@@ -1,6 +1,3 @@
-from db.my_sql import MySql
-
-
 class BaseItem(object):
     def _pop_null_value(self):
         data = self.__dict__.copy()
@@ -47,8 +44,7 @@ class TBOrderItem(BaseItem):
     def _table_name():
         return "tb_order_spider"
 
-    def save(self):
-        ms = MySql()
+    def save(self, ms):
         data = self._pop_null_value()
         condition = self._condition()
         res = ms.get(t=self._table_name(), c=condition)
@@ -86,13 +82,13 @@ class TBOrderDetailItem(BaseItem):
     def _table_name():
         return "tb_order_detail_spider"
 
-    def save(self):
-        ms = MySql()
+    def save(self, ms):
         data = self._pop_null_value()
         condition = self._condition()
         res = ms.get(t=self._table_name(), c=condition)
         if res:
-            data.pop("goodsCode")
+            if data.get("goodsCode"):
+                data.pop("goodsCode")
             ms.update(t=self._table_name(), set=data, c=condition)
             # ms.print_update_sql(t=self._table_name(), set=data, c=condition)
         else:
