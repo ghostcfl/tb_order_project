@@ -185,8 +185,8 @@ class MySql(object):
             return result
 
     @classmethod
-    def cls_get(cls, **kwargs):
-        ms = MySql()
+    def cls_get(cls, db_setting=None, **kwargs):
+        ms = MySql(db_setting=db_setting)
         return ms.get(**kwargs)
 
     def get_one(self, **kwargs):
@@ -196,8 +196,8 @@ class MySql(object):
         return self.get(dict_result=True, **kwargs)
 
     @classmethod
-    def cls_get_dict(cls, **kwargs):
-        ms = MySql()
+    def cls_get_dict(cls, db_setting=None, **kwargs):
+        ms = MySql(db_setting=db_setting)
         return ms.get_dict(**kwargs)
 
     def print_get_sql(self, **kwargs):
@@ -408,6 +408,11 @@ class MySql(object):
 
 
 if __name__ == '__main__':
+    res = MySql.cls_get_dict(t="tb_order_spider",
+                             cn=["detailURL", "orderNo"],
+                             c={"isDetaildown": 0, "fromStore": "KY"},
+                             o=["createTime"], om="d")
+    print(res)
     pass
     # from settings import TEST_SERVER_DB_TEST
     #
