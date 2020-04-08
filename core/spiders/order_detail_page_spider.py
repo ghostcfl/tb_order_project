@@ -8,7 +8,7 @@ from core.spiders.base_spider import BaseSpider
 from model import TBOrderItem, TBOrderDetailItem
 from db.my_sql import MySql
 from tools.logger import logger
-from tools.tools_method import store_trans, status_format,my_sleep
+from tools.tools_method import store_trans, status_format, my_sleep
 from tools.verify import verify
 
 
@@ -108,7 +108,7 @@ class OrderDetailPageSpider(BaseSpider):
                 print(tb_order_detail_item.__str__())
                 tb_order_detail_item.save(ms)
             del ms
-            my_sleep(random_sleep=True)
+            my_sleep(seconds=15, random_sleep=True)
         verify()
 
     @staticmethod
