@@ -192,6 +192,11 @@ class MySql(object):
     def get_one(self, **kwargs):
         return self.get(return_one=True, **kwargs)
 
+    @classmethod
+    def cls_get_one(cls, db_setting=None, **kwargs):
+        ms = MySql(db_setting=db_setting)
+        return ms.get_one(**kwargs)
+
     def get_dict(self, **kwargs):
         return self.get(dict_result=True, **kwargs)
 
