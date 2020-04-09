@@ -1,5 +1,7 @@
 import abc
 
+from tools.tools_method import time_format
+
 
 class BaseItem(abc.ABC):
     def __str__(self):
@@ -114,7 +116,7 @@ class PriceTBItem(BaseItem):
         self.typeabbrev = kwargs.get('typeabbrev')
         self.price_tb = kwargs.get('price_tb')
         self.currabrev = kwargs.get('currabrev', "CNY")
-        self.operator = kwargs.get('operator')
+        self.operator = kwargs.get('operator', '爬虫维护')
         self.last_time = kwargs.get('last_time')
         self.flag = kwargs.get('flag')
         self.freight = kwargs.get('freight')
@@ -124,7 +126,8 @@ class PriceTBItem(BaseItem):
         self.rates = kwargs.get('rates')
         self.package_number = kwargs.get('package_number')
         self.description = kwargs.get('description')
-        self.SpiderDate = kwargs.get('SpiderDate')
+        self.SpiderDate = kwargs.get('SpiderDate', time_format("%Y-%m-%d %H:%M:%S"))
+        self.attribute_map = kwargs.get('attribute_map')
 
     @staticmethod
     def _table_name():
@@ -133,6 +136,24 @@ class PriceTBItem(BaseItem):
     def _condition(self):
         condition = {"stockid": self.stockid, "link_id": self.link_id, "shop_id": self.shop_id}
         return condition
+
+    def save(self, ms):
+        data = self._pop_null_value()
+        if data.get('attribute_map'):
+            data.pop('attribute_map')
+        condition = self._condition()
+        res = ms.get(t=self._table_name(), c=condition)
+        if res:
+            data['flag'] = 'update'
+            data.pop('operator')
+            ms.update(t=self._table_name(), set=data, c=condition)
+            # ms.print_update_sql(t=self._table_name(), set=data, c=condition)
+        else:
+            data['flag'] = 'add'
+            data['last_time'] = time_format("%Y-%m-%d %H:%M:%S")
+            data['package_number'] = 1
+            ms.insert(t=self._table_name(), d=data)
+            # ms.print_insert_sql(t=self._table_name(), d=data)
 
 
 if __name__ == '__main__':
