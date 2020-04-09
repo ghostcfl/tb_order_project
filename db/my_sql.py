@@ -270,6 +270,11 @@ class MySql(object):
                 self._con.commit()
                 break
 
+    @classmethod
+    def cls_update(cls, **kwargs):
+        ms = MySql()
+        ms.update(**kwargs)
+
     def print_update_help(self, **kwargs):
         self.update(help=True, **kwargs)
 
@@ -336,6 +341,11 @@ class MySql(object):
             else:
                 self._con.commit()
                 break
+
+    @classmethod
+    def cls_insert(cls, **kwargs):
+        ms = MySql()
+        ms.insert(**kwargs)
 
     def print_insert_help(self, **kwargs):
         self.insert(help=True, **kwargs)
