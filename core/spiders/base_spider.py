@@ -14,3 +14,8 @@ class BaseSpider(object):
     async def intercept_response(self, res):
         """截取response响应"""
         pass
+
+    async def listening(self, page):
+        await page.setRequestInterception(True)
+        page.on('request', self.intercept_request)
+        page.on('response', self.intercept_response)
