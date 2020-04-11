@@ -3,3 +3,4 @@ loguru
 pyppeteer
 requests
 jsonpath
+pyquery
