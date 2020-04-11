@@ -4,6 +4,7 @@ import datetime
 import random
 import shelve
 import os
+import asyncio
 
 
 def time_format(format_string="%Y-%m-%d %H:%M:%S"):
@@ -20,6 +21,18 @@ def my_sleep(seconds=60, random_sleep=None):
         seconds -= 1
     print("")
     time.sleep(seconds)
+
+
+def my_async_sleep(seconds=60, random_sleep=None):
+    if random_sleep:
+        seconds = random.uniform(1, seconds)
+    print(time_format() + " | ", end="", flush=True)
+    while seconds > 1:
+        asyncio.sleep(1)
+        print(">", end="", flush=True)
+        seconds -= 1
+    print("")
+    asyncio.sleep(seconds)
 
 
 def time_zone(args):
