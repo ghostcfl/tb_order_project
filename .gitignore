@@ -2,7 +2,10 @@
 /core/browser/chrome-win
 settings.py
 /tools/log.log
+/tools/data/*
 test.py
 /chrome-win
 *.json
 /userdata
+*.html
+*.js
