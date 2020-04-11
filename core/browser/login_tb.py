@@ -151,16 +151,15 @@ class LoginTB(object):
                 await page.mouse.up()
                 while 1:
                     try:
-                        frame.waitForSelector(CAPTCHA_ERROR, timeout=10000)
-                        await asyncio.sleep(2)
-                        await frame.click(CAPTCHA_ERROR_CLICK)
-                        break
+                        await frame.waitForSelector(CAPTCHA_SUCCESS, timeout=10000)
                     except Exception as e:
                         try:
-                            frame.waitForSelector(CAPTCHA_SUCCESS, timeout=10000)
-                        except Exception as e:
+                            await asyncio.sleep(2)
+                            await frame.waitForSelector(CAPTCHA_ERROR, timeout=10000)
+                            await asyncio.sleep(2)
+                            await frame.click(CAPTCHA_ERROR_CLICK)
                             break
-                        else:
+                        except Exception as e:
                             await asyncio.sleep(1)
                             slider = await self.check_captcha(frame)
                             if not slider:
@@ -168,40 +167,53 @@ class LoginTB(object):
                                 frame = await self.get_nc_frame(frames)
                                 if not frame:
                                     return 0
+                    else:
+                        await asyncio.sleep(2)
+                        return 0
 
     async def phone_verify(self, page, fromStore):
         try:
-            await page.waitForSelector("#container", timeout=10000)
+            await page.waitForSelector("#container", timeout=30000)
         except errors.TimeoutError:
             logger.info("超时末扫码或需要手机验证！")
             await self.verify(page, fromStore)
             await page.goto("https://myseller.taobao.com/home.htm")
         finally:
             await page.waitForSelector("#container", timeout=0)
-            try:
-                await page.goto("https://trade.taobao.com/trade/itemlist/list_sold_items.htm")
-                await page.waitForSelector(".pagination-mod__show-more-page-button___txdoB", timeout=10000)
-            except errors.TimeoutError:
-                await self.verify(page, fromStore)
-                await page.goto("https://trade.taobao.com/trade/itemlist/list_sold_items.htm")
-                await page.waitForSelector(".pagination-mod__show-more-page-button___txdoB", timeout=30000)
-            except errors.PageError:
-                await self.verify(page, fromStore)
-                await page.goto("https://trade.taobao.com/trade/itemlist/list_sold_items.htm")
-                await page.waitForSelector(".pagination-mod__show-more-page-button___txdoB", timeout=30000)
-            finally:
-                await page.click(".pagination-mod__show-more-page-button___txdoB")  # 显示全部页码
-                t = await self.slider(page)
-                if t:
-                    return t
-                else:
-                    return 0
+            while 1:
+                try:
+                    await page.goto("https://trade.taobao.com/trade/itemlist/list_sold_items.htm")
+                    await page.waitForSelector(".pagination-mod__show-more-page-button___txdoB", timeout=10000)
+                except Exception as e:
+                    str(e)
+                    await self.verify(page, fromStore)
+                    await page.goto("https://trade.taobao.com/trade/itemlist/list_sold_items.htm")
+                    await page.waitForSelector(".pagination-mod__show-more-page-button___txdoB", timeout=30000)
+                finally:
+                    if page.url == "https://trade.taobao.com/trade/itemlist/list_sold_items.htm":
+                        await page.click(".pagination-mod__show-more-page-button___txdoB")  # 显示全部页码
+                        break
+            t = await self.slider(page)
+            if t:
+                return t
+            else:
+                return 0
 
     async def verify(self, page, fromStore):
+        frame = None
+        frames = page.frames
         try:
-            frames = page.frames
-            frame = frames[1]
-            await frame.waitForSelector(PHONE_CHECK_INPUT[0], timeout=10000)
+            for f in frames:
+                input_box1 = await f.J(PHONE_CHECK_INPUT[0])
+                input_box2 = await f.J(PHONE_CHECK_INPUT[1])
+                if input_box1 or input_box2:
+                    frame = f
+            if frame:
+                await frame.waitForSelector(PHONE_CHECK_INPUT[0], timeout=10000)
+            else:
+                return 0
+                # logger.error("手机验证码输入框验证码错误")
+                # exit("手机验证码输入框验证码错误")
         except errors.TimeoutError:
             try:
                 await frame.waitForSelector(PHONE_CHECK_INPUT[1], timeout=10000)
