@@ -4,14 +4,14 @@ import datetime
 import random
 
 
-def time_format(format_string):
+def time_format(format_string="%Y-%m-%d %H:%M:%S"):
     return datetime.datetime.now().strftime(format_string)
 
 
 def my_sleep(seconds=60, random_sleep=None):
     if random_sleep:
         seconds = random.uniform(1, seconds)
-    print(time_format("%Y-%d-%m %H:%M:%S") + " | ", end="", flush=True)
+    print(time_format() + " | ", end="", flush=True)
     while seconds > 1:
         time.sleep(1)
         print(">", end="", flush=True)
@@ -28,19 +28,30 @@ def time_zone(args):
     return time_list
 
 
-def store_trans(string):
-    if string == "YK":
-        return '玉佳企业店'
-    elif string == "KY":
-        return "开源电子"
-    elif string == "SC":
-        return '微信商城'
-    elif string == "VP":
-        return '批发'
-    elif string == "YJ":
-        return "玉佳电子"
-    elif string == "TB":
-        return "赛宝电子"
+def yesterday(time_str):
+    today = datetime.date.today()
+    oneday = datetime.timedelta(days=1)
+    yesterday = today - oneday
+    return str(yesterday) + " " + time_str
+
+
+def store_trans(string, action='code_2_name'):
+    result_dict = {
+        "code_2_name": {
+            "YK": "玉佳企业店",
+            "KY": "开源电子",
+            "TB": "赛宝电子",
+            "YJ": "玉佳电子",
+        },
+        "code_2_id": {
+            "YK": "197444037",
+            "KY": "115443253",
+            "TB": "34933991",
+            "YJ": "68559944",
+        }
+    }
+
+    return result_dict[action][string]
 
 
 def format_tb_name(string):
