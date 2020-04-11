@@ -2,6 +2,8 @@ import re
 import time
 import datetime
 import random
+import shelve
+import os
 
 
 def time_format(format_string="%Y-%m-%d %H:%M:%S"):
@@ -87,3 +89,40 @@ def status_format(string):
             else:
                 temp = a.group()
             return temp
+
+
+def write(flag, value):
+    path = os.path.dirname(__file__) + "data"
+    if not os.path.exists(path):
+        os.mkdir(path)
+
+    with shelve.open(path + "/data") as db:
+        db[flag] = value
+
+
+def read(flag):
+    path = os.path.dirname(__file__) + "data"
+    if not os.path.exists(path):
+        os.mkdir(path)
+    try:
+        with shelve.open(path + "/data") as db:
+            try:
+                return db[flag]
+            except KeyError:
+                return 0
+    except FileNotFoundError:
+        return 0
+
+
+def delete(flag):
+    path = os.path.dirname(__file__) + "data"
+    if not os.path.exists(path):
+        os.mkdir(path)
+    try:
+        with shelve.open(path + "/data") as db:
+            try:
+                del db[flag]
+            except KeyError:
+                pass
+    except FileNotFoundError:
+        pass
