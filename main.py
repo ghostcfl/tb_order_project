@@ -7,16 +7,16 @@ from core.browser.login_tb import LoginTB
 from settings import STORE_INFO
 
 
-async def task_1(o_l_p_s, o_d_p_s, o_d_l_id_s):
+async def task_1(list_spider, detail_spider, link_id_spider):
     page_num = 1
     while 1:
-        completed = await o_l_p_s.get_page(page_num)
+        completed = await list_spider.get_page(page_num)
         if completed == 1:
             page_num += 1
         elif completed == 2:
             page_num = 1
-        await o_d_p_s.get_page(),
-        await o_d_l_id_s.run()
+        await detail_spider.get_page(),
+        await link_id_spider.run()
 
 
 async def task_2(o_d_p_s, o_d_l_id_s):
