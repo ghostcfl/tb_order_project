@@ -229,30 +229,27 @@ class DelayOrderUpdate(OrderListPageSpider):
     }
 
     async def get_page(self, page_num=None):
-        self.completed = 0
-
-        today = datetime.datetime.now()
-        oneday = datetime.timedelta(minutes=60)
-        earlier_15_minutes = today - oneday
-        updateTime = earlier_15_minutes.strftime("%Y-%m-%d %H:%M:%S")
-        payTime = yesterday("18:00:00")
-        sql = """      
-               SELECT 
-               tos.orderNo
-               FROM tb_order_spider tos
-               WHERE  tos.updateTime<'{}'
-               AND tos.`orderStatus` = '买家已付款' 
-               AND tos.`fromStore` = '{}' 
-               AND tos.payTime<'{}'
-               ORDER BY updateTime;
-               """.format(updateTime, self.fromStore, payTime)
+        delete("headers")
         while 1:
+            today = datetime.datetime.now()
+            oneday = datetime.timedelta(minutes=60)
+            earlier_15_minutes = today - oneday
+            updateTime = earlier_15_minutes.strftime("%Y-%m-%d %H:%M:%S")
+            payTime = yesterday("18:00:00")
+            sql = """      
+                   SELECT 
+                   tos.orderNo
+                   FROM tb_order_spider tos
+                   WHERE  tos.updateTime<'{}'
+                   AND tos.`orderStatus` = '买家已付款' 
+                   AND tos.`fromStore` = '{}' 
+                   AND tos.payTime<'{}'
+                   ORDER BY updateTime;
+                   """.format(updateTime, self.fromStore, payTime)
             headers = read("headers")
-            if headers:
-                order_no = MySql.cls_get_one(sql=sql)
+            order_no = MySql.cls_get_one(sql=sql)
+            if headers and order_no:
                 logger.info(order_no)
-                if not order_no:
-                    return 3
                 self.data['orderId'] = order_no
                 r = requests.post(self.url, data=self.data, headers=headers)
                 a = r.json()
