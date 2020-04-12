@@ -115,6 +115,7 @@ class PriceTBItem(BaseItem):
         self.shop_id = kwargs.get('shop_id')
         self.typeabbrev = kwargs.get('typeabbrev')
         self.price_tb = kwargs.get('price_tb')
+        self.price_erp = kwargs.get('price_erp', 0)
         self.currabrev = kwargs.get('currabrev', "CNY")
         self.operator = kwargs.get('operator', '爬虫维护')
         self.last_time = kwargs.get('last_time')
