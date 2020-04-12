@@ -126,7 +126,7 @@ class PriceTBItem(BaseItem):
         self.rates = kwargs.get('rates')
         self.package_number = kwargs.get('package_number')
         self.description = kwargs.get('description')
-        self.SpiderDate = kwargs.get('SpiderDate', time_format("%Y-%m-%d %H:%M:%S"))
+        self.SpiderDate = kwargs.get('SpiderDate', time_format())
         self.attribute_map = kwargs.get('attribute_map')
 
     @staticmethod
@@ -148,12 +148,14 @@ class PriceTBItem(BaseItem):
             data.pop('operator')
             ms.update(t=self._table_name(), set=data, c=condition)
             # ms.print_update_sql(t=self._table_name(), set=data, c=condition)
+            return 0
         else:
             data['flag'] = 'add'
-            data['last_time'] = time_format("%Y-%m-%d %H:%M:%S")
+            data['last_time'] = time_format()
             data['package_number'] = 1
             ms.insert(t=self._table_name(), d=data)
             # ms.print_insert_sql(t=self._table_name(), d=data)
+            return 1
 
 
 if __name__ == '__main__':
