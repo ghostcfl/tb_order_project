@@ -105,7 +105,7 @@ def status_format(string):
 
 
 def write(flag, value):
-    path = os.path.dirname(__file__) + "data"
+    path = os.path.dirname(__file__) + "/data"
     if not os.path.exists(path):
         os.mkdir(path)
 
@@ -114,7 +114,7 @@ def write(flag, value):
 
 
 def read(flag):
-    path = os.path.dirname(__file__) + "data"
+    path = os.path.dirname(__file__) + "/data"
     if not os.path.exists(path):
         os.mkdir(path)
     try:
@@ -128,7 +128,7 @@ def read(flag):
 
 
 def delete(flag):
-    path = os.path.dirname(__file__) + "data"
+    path = os.path.dirname(__file__) + "/data"
     if not os.path.exists(path):
         os.mkdir(path)
     try:
