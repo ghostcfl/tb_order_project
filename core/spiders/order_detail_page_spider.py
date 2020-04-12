@@ -57,7 +57,6 @@ class OrderDetailPageSpider(BaseSpider):
             # b = a.replace('\\\\\\"', '')
             # data = b.replace('\\"', '"')
             m = json.loads(a)
-            # tb_order_item.actualFee = m['mainOrder']['payInfo']['actualFee']['value']
             tb_order_item.actualFee = jsonpath(m, '$..actualFee.value')[0]
             tb_order_item.orderStatus = status_format(jsonpath(m, '$..statusInfo.text')[0])
             if tb_order_item.orderStatus == '等待买家付款':
@@ -91,7 +90,6 @@ class OrderDetailPageSpider(BaseSpider):
             tb_order_item.receiverPhone = rec_info.split("，")[1]
             tb_order_item.receiverAddress = "".join(rec_info.split("，")[2:])
             tb_order_item.save(ms)
-            print(tb_order_item.__str__())
             sub_orders = m['mainOrder']['subOrders']
             for i in range(len(sub_orders)):
                 tb_order_detail_item = TBOrderDetailItem(orderNo=orderNo)
@@ -107,7 +105,6 @@ class OrderDetailPageSpider(BaseSpider):
                                     if p_list and not f_prom:
                                         temp += float(p_list.pop())
                 tb_order_detail_item.unitBenefits = temp
-                print(tb_order_detail_item.__str__())
                 tb_order_detail_item.save(ms)
             del ms
             my_sleep(seconds=15, random_sleep=True)
