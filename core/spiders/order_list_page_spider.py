@@ -6,6 +6,7 @@ import requests
 from core.spiders.base_spider import BaseSpider
 from tools.logger import logger
 from tools.tools_method import time_zone, store_trans, time_format, format_tb_name, format_attribute
+from tools.tools_method import yesterday, write, read, delete, my_async_sleep
 from settings import EARLIEST_ORDER_CREATE_TIME
 from model import TBOrderItem, TBOrderDetailItem
 from db.my_sql import MySql
@@ -13,12 +14,15 @@ from db.my_sql import MySql
 
 class OrderListPageSpider(BaseSpider):
     base_url = "https://trade.taobao.com"
+    url = 'https://trade.taobao.com/trade/itemlist/asyncSold.htm?event_submit_do_query=1&_input_charset=utf8'
 
     async def intercept_response(self, res):
-        if res.url == 'https://trade.taobao.com/trade/itemlist/asyncSold.htm?event_submit_do_query=1&_input_charset=utf8':
+        req = res.request
+        if res.url == self.url:
             a = await res.json()
             try:
                 await self.parse(a['mainOrders'], a['page']['currentPage'])
+                write(flag="headers", value=req.headers)
             except KeyError:
                 logger.error("KeyError")
 
@@ -30,9 +34,7 @@ class OrderListPageSpider(BaseSpider):
             for _ in range(3):
                 await self.page.keyboard.press("Delete")
                 await self.page.keyboard.press("Backspace")
-            await self.page.setRequestInterception(True)
-            self.page.on('request', self.intercept_request)
-            self.page.on('response', self.intercept_response)
+            await self.listening(self.page)
             await self.page.type(".pagination-options input", str(page_num))
             await self.page.keyboard.press("Enter")
             restart = await self.login.slider(self.page)
@@ -42,9 +44,15 @@ class OrderListPageSpider(BaseSpider):
                 ".pagination-item.pagination-item-" + str(page_num) + ".pagination-item-active",
                 timeout=10000)
         except Exception as e:
-            logger.info(e)
+            if re.search('\"\.pagination-options-go\"', str(e)):
+                restart = await self.login.slider(self.page)
+                if restart:
+                    exit("滑块验证码失败，退出")
+            else:
+                logger.error(str(e))
         while 1:
             if self.completed:
+                await my_async_sleep(10, True)
                 return self.completed
             await asyncio.sleep(2)
 
@@ -99,7 +107,7 @@ class OrderListPageSpider(BaseSpider):
         tb_order_item.detailURL = "https:" + main_orders[i]['statusInfo']['operations'][0]['url']
         tb_order_item.orderStatus = main_orders[i]['statusInfo']['text']
         tb_order_item.fromStore = self.fromStore
-        tb_order_item.updateTime = time_format("%Y-%d-%m %H:%M:%S")
+        tb_order_item.updateTime = time_format()
         if flag == 1:
             data_url = self.base_url + main_orders[i]['operations'][0]['dataUrl']
             tb_order_item.sellerFlag = await self.get_flag_text(data_url)
@@ -174,6 +182,89 @@ class OrderListPageSpider(BaseSpider):
         x = r.json()
         return x.get("tip")
 
+    @classmethod
+    async def run(cls, login, browser, page, from_store):
+        page_num = 1
+        list_spider = OrderListPageSpider(login, browser, page, from_store)
+        while 1:
+            completed = await list_spider.get_page(page_num)
+            if completed == 1:
+                page_num += 1
+            elif completed == 2:
+                page_num = 1
+
+
+class DelayOrderUpdate(OrderListPageSpider):
+    data = {
+        'auctionType': '0',
+        'close': '0',
+        'pageNum': '1',
+        'pageSize': '15',
+        'queryMore': 'false',
+        'rxAuditFlag': '0',
+        'rxElectronicAllFlag': '0',
+        'rxElectronicAuditFlag': '0',
+        'rxHasSendFlag': '0',
+        'rxOldFlag': '0',
+        'rxSendFlag': '0',
+        'rxSuccessflag': '0',
+        'rxWaitSendflag': '0',
+        'tradeTag': '0',
+        'useCheckcode': 'false',
+        'useOrderInfo': 'false',
+        'errorCheckcode': 'false',
+        'action': 'itemlist/SoldQueryAction',
+        'prePageNo': '2',
+        'buyerNick': '',
+        'dateBegin': '0',
+        'dateEnd': '0',
+        'logisticsService': '',
+        'orderStatus': '',
+        'queryOrder': 'desc',
+        'rateStatus': '',
+        'refund': '',
+        'sellerNick': '',
+        'tabCode': 'latest3Months',
+        'orderId': ''
+    }
+
+    async def get_page(self, page_num=None):
+        self.completed = 0
+
+        today = datetime.datetime.now()
+        oneday = datetime.timedelta(minutes=60)
+        earlier_15_minutes = today - oneday
+        updateTime = earlier_15_minutes.strftime("%Y-%m-%d %H:%M:%S")
+        payTime = yesterday("18:00:00")
+        sql = """      
+               SELECT 
+               tos.orderNo
+               FROM tb_order_spider tos
+               WHERE  tos.updateTime<'{}'
+               AND tos.`orderStatus` = '买家已付款' 
+               AND tos.`fromStore` = '{}' 
+               AND tos.payTime<'{}'
+               ORDER BY updateTime;
+               """.format(updateTime, self.fromStore, payTime)
+        while 1:
+            headers = read("headers")
+            if headers:
+                order_no = MySql.cls_get_one(sql=sql)
+                logger.info(order_no)
+                if not order_no:
+                    return 3
+                self.data['orderId'] = order_no
+                r = requests.post(self.url, data=self.data, headers=headers)
+                a = r.json()
+                try:
+                    await self.parse(a['mainOrders'], a['page']['currentPage'])
+                except KeyError:
+                    delete("headers")
+                    logger.error("KeyError")
+                else:
+                    pass
+            await asyncio.sleep(60)
+
 
 if __name__ == '__main__':
     from core.browser.login_tb import LoginTB
@@ -181,5 +272,10 @@ if __name__ == '__main__':
 
     loop = asyncio.get_event_loop()
     l, b, p, f = loop.run_until_complete(LoginTB.run(**STORE_INFO['KY']))
-    olps = OrderListPageSpider(l, b, p, f)
-    loop.run_until_complete(olps.get_page(1))
+
+    dou = DelayOrderUpdate(l, b, p, f)
+    tasks = [
+        OrderListPageSpider.run(l, b, p, f),
+        dou.get_page()
+    ]
+    loop.run_until_complete(asyncio.wait(tasks))
