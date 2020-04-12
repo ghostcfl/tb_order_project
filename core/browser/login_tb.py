@@ -124,6 +124,7 @@ class LoginTB(object):
         else:
             frame = await self.get_nc_frame(frames)
         if frame:
+            try_times = 0
             nc = await frame.J(CAPTCHA)
             nc_detail = await nc.boundingBox()
             print(nc_detail)
@@ -132,9 +133,8 @@ class LoginTB(object):
             width = int(nc_detail['width'] - 1)
             height = int(nc_detail['height'] - 1)
             logger.info("条形验证码")
-            try_times = 0
+            logger.info("第" + str(try_times) + "次尝试滑动验证码")
             while 1:
-                logger.info("第" + str(try_times) + "次尝试滑动验证码")
                 if try_times > 10:
                     logger.info("滑动失败退出")
                     exit("滑动失败退出")
@@ -151,25 +151,38 @@ class LoginTB(object):
                 await page.mouse.up()
                 while 1:
                     try:
-                        await frame.waitForSelector(CAPTCHA_SUCCESS, timeout=10000)
+                        await frame.waitForSelector(CAPTCHA_ERROR, timeout=10000)
                     except Exception as e:
-                        try:
-                            await asyncio.sleep(2)
-                            await frame.waitForSelector(CAPTCHA_ERROR, timeout=10000)
-                            await asyncio.sleep(2)
-                            await frame.click(CAPTCHA_ERROR_CLICK)
-                            break
-                        except Exception as e:
-                            await asyncio.sleep(1)
-                            slider = await self.check_captcha(frame)
-                            if not slider:
-                                logger.info("滑动成功1")
-                                frame = await self.get_nc_frame(frames)
-                                if not frame:
-                                    return 0
+                        if await frame.J(CAPTCHA_SUCCESS):
+                            return 0
+                        slider = await self.check_captcha(page)
+                        if not slider:
+                            return 0
+                        break
                     else:
-                        await asyncio.sleep(2)
-                        return 0
+                        await frame.click(CAPTCHA_ERROR_CLICK)
+                        break
+
+                    # try:
+                    #     await frame.waitForSelector(CAPTCHA_SUCCESS, timeout=10000)
+                    # except Exception as e:
+                    #     try:
+                    #         await asyncio.sleep(2)
+                    #         await frame.waitForSelector(CAPTCHA_ERROR, timeout=10000)
+                    #         await asyncio.sleep(2)
+                    #         await frame.click(CAPTCHA_ERROR_CLICK)
+                    #         break
+                    #     except Exception as e:
+                    #         await asyncio.sleep(1)
+                    #         slider = await self.check_captcha(frame)
+                    #         if not slider:
+                    #             logger.info("滑动成功1")
+                    #             frame = await self.get_nc_frame(frames)
+                    #             if not frame:
+                    #                 return 0
+                    # else:
+                    #     await asyncio.sleep(2)
+                    #     return 0
 
     async def phone_verify(self, page, fromStore):
         try:
