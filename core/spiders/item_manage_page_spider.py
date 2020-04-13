@@ -4,7 +4,7 @@ import asyncio
 from pyquery import PyQuery
 from jsonpath import jsonpath
 
-from settings import TEST_SERVER_DB_TEST, FAST_EDIT_BTN
+from settings import FAST_EDIT_BTN
 from core.spiders.base_spider import BaseSpider
 from tools.logger import logger
 from model import PriceTBItem
