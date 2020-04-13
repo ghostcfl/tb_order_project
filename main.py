@@ -15,12 +15,7 @@ async def task_1(list_spider, detail_spider, link_id_spider):
             page_num += 1
         elif completed == 2:
             page_num = 1
-        await detail_spider.get_page(),
-        await link_id_spider.run()
-
-
-async def task_2(delay_order_spider):
-    await delay_order_spider.get_page()
+        await detail_spider.get_page()
 
 
 if __name__ == '__main__':
@@ -33,7 +28,8 @@ if __name__ == '__main__':
 
     tasks = [
         task_1(o_l_p_s, o_d_p_s, o_d_l_id_s),
-        task_2(d_o_u)
+        OrderDetailLinkIDSpider.run(l, b, p, f),
+        DelayOrderUpdate.run(l, b, p, f)
     ]
     loop.run_until_complete(asyncio.wait(tasks))
-    # input("阻塞进程用的，后续要删除")
+    # loop.run_until_complete(task_1(o_l_p_s, o_d_p_s, o_d_l_id_s))
