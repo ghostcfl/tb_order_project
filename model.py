@@ -56,7 +56,7 @@ class TBOrderItem(BaseItem):
         self.shippingNo = kwargs.get('shippingNo')
         self.buyerComments = kwargs.get('buyerComments')
         self.fromStore = kwargs.get('fromStore')
-        self.updateTime = kwargs.get('updateTime')
+        self.updateTime = kwargs.get('updateTime',time_format())
         self.isDetaildown = kwargs.get('isDetaildown')
         self.isVerify = kwargs.get('isVerify')
 
