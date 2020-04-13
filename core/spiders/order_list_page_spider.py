@@ -2,6 +2,7 @@ import asyncio
 import datetime
 import re
 import requests
+from jsonpath import jsonpath
 
 from core.spiders.base_spider import BaseSpider
 from tools.logger import logger
@@ -58,7 +59,6 @@ class OrderListPageSpider(BaseSpider):
 
     async def parse(self, main_orders, page_num):
         # print(main_orders)
-        global ms
         ms = MySql()
         t = time_zone(["08:00", "20:00", "23:59"])
         a = datetime.datetime.now()
@@ -76,9 +76,9 @@ class OrderListPageSpider(BaseSpider):
             loop_control = 0  # 退出循环的控制变量
             continue_code = 0  # 有些订单的商品,在未付款时就已经退掉了,所以直接直接将数据进行删除
             # 解析并保存订单到数据库
-            sub_orders, tb_order_item = await self.parse_order_item(i, main_orders)
+            sub_orders, tb_order_item = await self.parse_order_item(i, main_orders, ms)
             # 解析并保存订单详细商品到数据库
-            await self.parse_order_detail_item(continue_code, i, main_orders, sub_orders, tb_order_item)
+            await self.parse_order_detail_item(continue_code, i, main_orders, sub_orders, tb_order_item, ms)
 
             date = datetime.date.today()
             date_limit = (date - datetime.timedelta(eoc)).strftime("%Y-%m-%d %H:%M:%S")
@@ -95,8 +95,7 @@ class OrderListPageSpider(BaseSpider):
         self.completed = 1
         del ms
 
-    async def parse_order_item(self, i, main_orders):
-        global ms
+    async def parse_order_item(self, i, main_orders, ms):
         tb_order_item = TBOrderItem()
         tb_order_item.orderNo = main_orders[i]["id"]
         tb_order_item.createTime = main_orders[i]['orderInfo']['createTime']
@@ -107,9 +106,8 @@ class OrderListPageSpider(BaseSpider):
         tb_order_item.detailURL = "https:" + main_orders[i]['statusInfo']['operations'][0]['url']
         tb_order_item.orderStatus = main_orders[i]['statusInfo']['text']
         tb_order_item.fromStore = self.fromStore
-        tb_order_item.updateTime = time_format()
-        if flag == 1:
-            data_url = self.base_url + main_orders[i]['operations'][0]['dataUrl']
+        if flag == 1 and jsonpath(main_orders, '$.operations..dataUrl'):
+            data_url = self.base_url + jsonpath(main_orders, '$.operations..dataUrl')[0]
             tb_order_item.sellerFlag = await self.get_flag_text(data_url)
         try:
             tb_order_item.isPhoneOrder = main_orders[i]['payInfo']['icons'][0]['linkTitle']
@@ -120,8 +118,7 @@ class OrderListPageSpider(BaseSpider):
         return sub_orders, tb_order_item
 
     @staticmethod
-    async def parse_order_detail_item(continue_code, i, main_orders, sub_orders, tb_order_item):
-        global ms
+    async def parse_order_detail_item(continue_code, i, main_orders, sub_orders, tb_order_item, ms):
         for j in range(len(sub_orders)):
             tb_order_detail_item = TBOrderDetailItem()
             tb_order_detail_item.orderNo = main_orders[i]["id"]
@@ -227,40 +224,82 @@ class DelayOrderUpdate(OrderListPageSpider):
         'tabCode': 'latest3Months',
         'orderId': ''
     }
+    data_before_3_month = {
+        'action': 'itemlist/SoldHisQueryAction',
+        'auctionType': '0',
+        'buyerNick': '',
+        'close': '0',
+        'dateBegin': '0',
+        'dateEnd': '0',
+        # 'lastStartRow': '2343631319_9223370458391616807_580496388009557599_580496388009557599',
+        'pageNum': '1',
+        'pageSize': '15',
+        'queryMore': 'false',
+        'queryOrder': 'desc',
+        'rxAuditFlag': '0',
+        'rxElectronicAllFlag': '0',
+        'rxElectronicAuditFlag': '0',
+        'rxHasSendFlag': '0',
+        'rxOldFlag': '0',
+        'rxSendFlag': '0',
+        'rxSuccessflag': '0',
+        'rxWaitSendflag': '0',
+        'tabCode': 'before3Months',
+        'tradeTag': '0',
+        'useCheckcode': 'false',
+        'useOrderInfo': 'false',
+        'errorCheckcode': 'false',
+        'orderId': '804126784615181089',
+        'prePageNo': '1'
+    }
 
     async def get_page(self, page_num=None):
         delete("headers")
+        today = datetime.datetime.now()
+        one_day = datetime.timedelta(minutes=60)
+        earlier_15_minutes = today - one_day
+        updateTime = earlier_15_minutes.strftime("%Y-%m-%d %H:%M:%S")
+        payTime = yesterday("18:00:00")
+        sql = """      
+               SELECT 
+               tos.orderNo,createTime
+               FROM tb_order_spider tos
+               WHERE  tos.updateTime<'{}'
+               AND tos.`orderStatus` = '买家已付款' 
+               AND tos.`fromStore` = '{}' 
+               AND tos.payTime<'{}'
+               ORDER BY updateTime;
+               """.format(updateTime, self.fromStore, payTime)
+        headers = read("headers")
+        res = MySql.cls_get_dict(sql=sql)
+        order_no = res[0]['orderNo']
+        days = (today - res[0]['createTime']).days
+        # print(days)
+        if days > 90:
+            data = self.data_before_3_month.copy()
+        else:
+            data = self.data.copy()
+        if headers and order_no:
+            logger.info(order_no)
+            data['orderId'] = order_no
+            r = requests.post(self.url, data=data, headers=headers)
+            a = r.json()
+            # print(a)
+            try:
+                await self.parse(a['mainOrders'], a['page']['currentPage'])
+            except KeyError:
+                delete("headers")
+                logger.error("KeyError")
+            else:
+                pass
+            # if self.completed:
+
+    @classmethod
+    async def run(cls, login, browser, page, from_store):
         while 1:
-            today = datetime.datetime.now()
-            oneday = datetime.timedelta(minutes=60)
-            earlier_15_minutes = today - oneday
-            updateTime = earlier_15_minutes.strftime("%Y-%m-%d %H:%M:%S")
-            payTime = yesterday("18:00:00")
-            sql = """      
-                   SELECT 
-                   tos.orderNo
-                   FROM tb_order_spider tos
-                   WHERE  tos.updateTime<'{}'
-                   AND tos.`orderStatus` = '买家已付款' 
-                   AND tos.`fromStore` = '{}' 
-                   AND tos.payTime<'{}'
-                   ORDER BY updateTime;
-                   """.format(updateTime, self.fromStore, payTime)
-            headers = read("headers")
-            order_no = MySql.cls_get_one(sql=sql)
-            if headers and order_no:
-                logger.info(order_no)
-                self.data['orderId'] = order_no
-                r = requests.post(self.url, data=self.data, headers=headers)
-                a = r.json()
-                try:
-                    await self.parse(a['mainOrders'], a['page']['currentPage'])
-                except KeyError:
-                    delete("headers")
-                    logger.error("KeyError")
-                else:
-                    pass
-            await asyncio.sleep(60)
+            delay_order_spider = DelayOrderUpdate(login, browser, page, from_store)
+            await delay_order_spider.get_page()
+            await my_async_sleep(15)
 
 
 if __name__ == '__main__':
@@ -272,7 +311,7 @@ if __name__ == '__main__':
 
     dou = DelayOrderUpdate(l, b, p, f)
     tasks = [
-        OrderListPageSpider.run(l, b, p, f),
+        # OrderListPageSpider.run(l, b, p, f),
         dou.get_page()
     ]
-    loop.run_until_complete(asyncio.wait(tasks))
+    loop.run_until_complete(dou.get_page())
