@@ -124,6 +124,7 @@ class LoginTB(object):
         else:
             frame = await self.get_nc_frame(frames)
         if frame:
+            await page.bringToFront()
             try_times = 0
             nc = await frame.J(CAPTCHA)
             nc_detail = await nc.boundingBox()
