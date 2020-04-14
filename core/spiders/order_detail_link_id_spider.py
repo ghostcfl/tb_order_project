@@ -24,6 +24,8 @@ class OrderDetailLinkIDSpider(BaseSpider):
             for result in results:
                 logger.info("link_id_spider-" + result['orderNo'])
                 data = await self._get_json(result['orderNo'])
+                if not data:
+                    return 0
                 sub_orders = data["data"]["subOrderViewDTOs"]
                 for so in sub_orders:
                     price_tb_item = PriceTBItem()
@@ -58,9 +60,13 @@ class OrderDetailLinkIDSpider(BaseSpider):
             'User-Agent': user_agent,
             'Cookie': cookies
         }
-        r = requests.get(url=url, headers=headers)
-        x = r.json()
-        return x
+        try:
+            r = requests.get(url=url, headers=headers)
+            x = r.json()
+        except Exception as e:
+            return 0
+        else:
+            return x
 
     @classmethod
     async def run(cls, login, browser, page, from_store):
@@ -76,5 +82,7 @@ if __name__ == '__main__':
 
     loop = asyncio.get_event_loop()
     l, b, p, f = loop.run_until_complete(LoginTB.run(**STORE_INFO['KY']))
-
-    loop.run_until_complete(OrderDetailLinkIDSpider.run(l, b, p, f))
+    r = OrderDetailLinkIDSpider(l, b, p, f)
+    # loop.run_until_complete(OrderDetailLinkIDSpider.run(l, b, p, f))
+    g = loop.run_until_complete(r.get_json('598093679034153502'))
+    print(g)
