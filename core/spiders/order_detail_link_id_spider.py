@@ -17,11 +17,12 @@ class OrderDetailLinkIDSpider(BaseSpider):
         sql = """SELECT url,a.orderNo FROM tb_order_detail_spider a
             JOIN tb_order_spider b ON a.`orderNo`=b.`orderNo`
             WHERE link_id="1" AND b.`fromStore`='{}' AND a.url IS NOT NULL
+            GROUP BY a.orderNo
             ORDER BY b.createTime DESC""".format(self.fromStore)
         results = ms.get_dict(sql=sql)
         if results:
             for result in results:
-                logger.info("link_id_spider", result['orderNo'])
+                logger.info("link_id_spider-" + result['orderNo'])
                 data = await self._get_json(result['orderNo'])
                 sub_orders = data["data"]["subOrderViewDTOs"]
                 for so in sub_orders:
@@ -66,7 +67,7 @@ class OrderDetailLinkIDSpider(BaseSpider):
         while 1:
             link_id_spider = OrderDetailLinkIDSpider(login, browser, page, from_store)
             await link_id_spider.save_link_id()
-            await my_async_sleep(5)
+            await my_async_sleep(15)
 
 
 if __name__ == '__main__':
