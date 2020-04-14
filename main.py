@@ -52,7 +52,7 @@ def run(shop_code):
             page_num += 1
         elif completed == 2:
             page_num = 1
-        my_async_sleep(20, random_sleep=True)
+        loop.run_until_complete(my_async_sleep(20, random_sleep=True))
         loop.run_until_complete(o_d_l_id_s.save_link_id())
         loop.run_until_complete(o_d_p_s.get_page())
         loop.run_until_complete(d_o_u.get_page())
