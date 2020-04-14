@@ -53,10 +53,10 @@ class OrderDetailPageSpider(BaseSpider):
                 continue
             content = await self.detail_page.content()
             a = re.search(r"var data = JSON.parse\('(.*)'\);", content).group(1)
-            a = a.encode("gbk").decode("unicode_escape")
-            # b = a.replace('\\\\\\"', '')
-            # data = b.replace('\\"', '"')
-            m = json.loads(a)
+            # a = a.encode("").decode("unicode_escape")
+            b = a.replace('\\\\\\"', '')
+            data = b.replace('\\"', '"')
+            m = json.loads(data)
             tb_order_item.actualFee = jsonpath(m, '$..actualFee.value')[0]
             tb_order_item.orderStatus = status_format(jsonpath(m, '$..statusInfo.text')[0])
             if tb_order_item.orderStatus == '等待买家付款':
@@ -129,6 +129,6 @@ if __name__ == '__main__':
     from settings import STORE_INFO
 
     loop = asyncio.get_event_loop()
-    l, b, p, f = loop.run_until_complete(LoginTB.run(**STORE_INFO['KY']))
+    l, b, p, f = loop.run_until_complete(LoginTB.run(**STORE_INFO['TB']))
     odps = OrderDetailPageSpider(l, b, p, f)
     loop.run_until_complete(odps.get_page())

@@ -1,5 +1,5 @@
 import pymysql
-from pymysql.err import OperationalError, Error
+from pymysql.err import OperationalError
 from tools.tools_method import my_sleep
 
 from settings import MAIN_SQL_SETTING
@@ -135,7 +135,7 @@ class MySql(object):
                     except OperationalError as e:
                         logger.error("数据库链接异常，5秒后尝试重连，原因：" + str(e))
                         my_sleep(5)
-                    except Error as e:
+                    except Exception as e:
                         logger.error("异常报错的sql语句：" + sql)
                         logger.error("异常内容：" + str(e) + "|异常类型：" + str(type(e)))
                         return None
@@ -151,7 +151,7 @@ class MySql(object):
                     except OperationalError as e:
                         logger.error("数据库链接异常，5秒后尝试重连，原因：" + str(e))
                         my_sleep(5)
-                    except Error as e:
+                    except Exception as e:
                         logger.error("异常报错的sql语句：" + sql)
                         logger.error("异常内容：" + str(e) + "|异常类型：" + str(type(e)))
                         return None
@@ -167,7 +167,7 @@ class MySql(object):
                 except OperationalError as e:
                     logger.error("数据库链接异常，5秒后尝试重连，原因：" + str(e))
                     my_sleep(5)
-                except Error as e:
+                except Exception as e:
                     logger.error("异常报错的sql语句：" + sql)
                     logger.error("异常内容：" + str(e) + "|异常类型：" + str(type(e)))
                     return None
@@ -266,7 +266,7 @@ class MySql(object):
             except OperationalError as e:
                 logger.error("数据库链接异常，5秒后尝试重连，原因：" + str(e))
                 my_sleep(5)
-            except Error as e:
+            except Exception as e:
                 logger.error("异常报错的sql语句：" + sql)
                 logger.error("异常内容：" + str(e) + "|异常类型：" + str(type(e)))
                 self._con.rollback()
@@ -338,7 +338,7 @@ class MySql(object):
             except OperationalError as e:
                 logger.error("数据库链接异常，5秒后尝试重连，原因：" + str(e))
                 my_sleep(5)
-            except Error as e:
+            except Exception as e:
                 logger.error("异常报错的sql语句：" + sql)
                 logger.error("异常内容：" + str(e) + "|异常类型：" + str(type(e)))
                 self._con.rollback()
@@ -406,7 +406,7 @@ class MySql(object):
             except OperationalError as e:
                 logger.error("数据库链接异常，5秒后尝试重连，原因：" + str(e))
                 my_sleep(5)
-            except Error as e:
+            except Exception as e:
                 logger.error("异常报错的sql语句：" + sql)
                 logger.error("异常内容：" + str(e) + "|异常类型：" + str(type(e)))
                 self._con.rollback()
