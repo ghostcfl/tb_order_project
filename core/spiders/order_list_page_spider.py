@@ -106,34 +106,6 @@ class OrderListPageSpider(BaseSpider):
                 logger.info("headers失效，重置cookies")
                 await self.set_post_headers()
             await asyncio.sleep(10)
-        # self.completed = 0
-        # try:
-        #     await self.page.waitForSelector(".pagination-options-go")
-        #     await self.page.focus(".pagination-options input")
-        #     for _ in range(3):
-        #         await self.page.keyboard.press("Delete")
-        #         await self.page.keyboard.press("Backspace")
-        #     await self.listening(self.page)
-        #     await self.page.type(".pagination-options input", str(page_num))
-        #     await self.page.keyboard.press("Enter")
-        #     restart = await self.login.slider(self.page)
-        #     if restart:
-        #         exit("滑块验证码失败，退出")
-        #     self.page.waitForSelector(
-        #         ".pagination-item.pagination-item-" + str(page_num) + ".pagination-item-active",
-        #         timeout=10000)
-        # except Exception as e:
-        #     if re.search('\"\.pagination-options-go\"', str(e)):
-        #         restart = await self.login.slider(self.page)
-        #         if restart:
-        #             exit("滑块验证码失败，退出")
-        #     else:
-        #         logger.error(str(e))
-        # while 1:
-        #     if self.completed:
-        #         await my_async_sleep(10, True)
-        #         return self.completed
-        #     await asyncio.sleep(2)
 
     async def parse(self, main_orders, page_num):
         # print(main_orders)

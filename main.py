@@ -5,7 +5,8 @@ from core.spiders.order_detail_page_spider import OrderDetailPageSpider
 from core.spiders.order_detail_link_id_spider import OrderDetailLinkIDSpider
 from core.browser.login_tb import LoginTB
 from settings import STORE_INFO
-from tools.tools_method import delete
+from tools.tools_method import delete, my_async_sleep
+from db.my_sql import MySql
 
 
 async def task_1(list_spider, detail_spider):
@@ -51,6 +52,11 @@ def run(shop_code):
             page_num += 1
         elif completed == 2:
             page_num = 1
+        my_async_sleep(20, random_sleep=True)
         loop.run_until_complete(o_d_l_id_s.save_link_id())
         loop.run_until_complete(o_d_p_s.get_page())
         loop.run_until_complete(d_o_u.get_page())
+        MySql.cls_update(t="tb_order_spider", set={"isDetaildown": 0},
+                         c={"isDetaildown": 2, "fromStore": f})
+        MySql.cls_update(t="tb_order_spider", set={"isVerify": 0},
+                         c={"isVerify": 2, "fromStore": f})
