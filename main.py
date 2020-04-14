@@ -22,7 +22,7 @@ async def task_1(list_spider, detail_spider):
 
 
 def async_run(shop_code):
-    delete("headers")
+    delete(shop_code + "headers")
     loop = asyncio.get_event_loop()
     l, b, p, f = loop.run_until_complete(LoginTB.run(**STORE_INFO[shop_code]))
     o_l_p_s = OrderListPageSpider(l, b, p, f)
@@ -37,7 +37,7 @@ def async_run(shop_code):
 
 
 def run(shop_code):
-    delete("headers")
+    delete(shop_code + "headers")
     loop = asyncio.get_event_loop()
     l, b, p, f = loop.run_until_complete(LoginTB.run(**STORE_INFO[shop_code]))
     o_l_p_s = OrderListPageSpider(l, b, p, f)

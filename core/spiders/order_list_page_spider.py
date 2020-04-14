@@ -64,7 +64,7 @@ class OrderListPageSpider(BaseSpider):
             #     logger.error("KeyError")
 
     async def set_post_headers(self):
-        delete("headers")
+        delete(self.fromStore + "headers")
         while 1:
             frames = self.page.frames
             frame = await self.login.get_nc_frame(frames)
@@ -346,7 +346,7 @@ class DelayOrderUpdate(OrderListPageSpider):
                         return self.completed
                     else:
                         logger.info("headers失效,需要重重置cookies")
-                        delete("headers")
+                        delete(self.fromStore + "headers")
                 else:
                     break
             await asyncio.sleep(15)
@@ -387,7 +387,7 @@ if __name__ == '__main__':
     from core.browser.login_tb import LoginTB
     from settings import STORE_INFO
 
-    delete("headers")
+    delete("KYheaders")
     loop = asyncio.get_event_loop()
     l, b, p, f = loop.run_until_complete(LoginTB.run(**STORE_INFO['KY']))
     dou = DelayOrderUpdate(l, b, p, f)
