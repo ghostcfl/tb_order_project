@@ -64,6 +64,7 @@ class OrderListPageSpider(BaseSpider):
             #     logger.error("KeyError")
 
     async def set_post_headers(self):
+        await self.page.bringToFront()
         delete(self.fromStore + "headers")
         while 1:
             frames = self.page.frames
