@@ -54,7 +54,7 @@ class OrderListPageSpider(BaseSpider):
             a = await res.json()
             if a.get("mainOrders"):
                 logger.info("重置cookies成功")
-                write(flag="headers", value=req.headers)
+                write(flag=self.fromStore + "headers", value=req.headers)
             else:
                 pass
             # try:
@@ -69,7 +69,7 @@ class OrderListPageSpider(BaseSpider):
             frames = self.page.frames
             frame = await self.login.get_nc_frame(frames)
             if not frame:
-                headers = read(flag="headers")
+                headers = read(flag=self.fromStore + "headers")
                 if not headers:
                     await self.listening(self.page)
                     try:
@@ -88,7 +88,7 @@ class OrderListPageSpider(BaseSpider):
     async def get_page(self, page_num):
         self.data['pageNum'] = page_num
         while 1:
-            headers = read("headers")
+            headers = read(self.fromStore + "headers")
             if headers:
                 logger.info("开始订单列表第 " + str(page_num) + " 页爬取")
                 logger.info(store_trans(self.fromStore))
@@ -328,7 +328,7 @@ class DelayOrderUpdate(OrderListPageSpider):
 
     async def get_page(self, page_num=None):
         while 1:
-            headers = read("headers")
+            headers = read(self.fromStore + "headers")
             if headers:
                 days, order_no = self._get_order_info()
                 if days > 90:
