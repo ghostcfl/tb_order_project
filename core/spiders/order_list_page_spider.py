@@ -346,9 +346,11 @@ class DelayOrderUpdate(OrderListPageSpider):
                         return self.completed
                     else:
                         logger.info("headers失效,需要重重置cookies")
-                        delete(self.fromStore + "headers")
+                        await self.set_post_headers()
                 else:
                     break
+            else:
+                await self.set_post_headers()
             await asyncio.sleep(15)
 
     def _get_order_info(self):
