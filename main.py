@@ -51,12 +51,12 @@ def run(shop_code):
         if completed == 1:
             page_num += 1
         elif completed == 2:
+            MySql.cls_update(t="tb_order_spider", set={"isDetaildown": 0},
+                             c={"isDetaildown": 2, "fromStore": f})
+            MySql.cls_update(t="tb_order_spider", set={"isVerify": 0},
+                             c={"isVerify": 2, "fromStore": f})
             page_num = 1
         loop.run_until_complete(my_async_sleep(20, random_sleep=True))
         loop.run_until_complete(o_d_l_id_s.save_link_id())
         loop.run_until_complete(o_d_p_s.get_page())
         loop.run_until_complete(d_o_u.get_page())
-        MySql.cls_update(t="tb_order_spider", set={"isDetaildown": 0},
-                         c={"isDetaildown": 2, "fromStore": f})
-        MySql.cls_update(t="tb_order_spider", set={"isVerify": 0},
-                         c={"isVerify": 2, "fromStore": f})
