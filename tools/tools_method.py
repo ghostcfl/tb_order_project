@@ -26,12 +26,12 @@ def my_sleep(seconds=60, random_sleep=None):
 async def my_async_sleep(seconds=60, random_sleep=None):
     if random_sleep:
         seconds = random.uniform(1, seconds)
-    print(time_format() + " | ", end="", flush=True)
+    # print(time_format() + " | ", end="", flush=True)
     while seconds > 1:
         await asyncio.sleep(1)
-        print(">", end="", flush=True)
+        # print(">", end="", flush=True)
         seconds -= 1
-    print("")
+    # print("")
     await asyncio.sleep(seconds)
 
 
