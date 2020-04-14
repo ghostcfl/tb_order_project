@@ -139,3 +139,12 @@ def delete(flag):
                 pass
     except FileNotFoundError:
         pass
+
+
+def delete_all():
+    path = os.path.dirname(__file__) + "/data"
+    if not os.path.exists(path):
+        os.mkdir(path)
+    with shelve.open(path + "/data") as db:
+        for x in db:
+            del db[x]
