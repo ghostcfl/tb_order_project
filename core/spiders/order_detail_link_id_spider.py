@@ -64,6 +64,7 @@ class OrderDetailLinkIDSpider(BaseSpider):
             r = requests.get(url=url, headers=headers)
             x = r.json()
         except Exception as e:
+            logger.info(order_no + " " + str(e))
             return 0
         else:
             return x
