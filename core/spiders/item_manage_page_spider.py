@@ -117,7 +117,7 @@ class ItemManagePageSpider(BaseSpider):
         while 1:
             try:
                 await self.listening(self.item_page)
-                await self.item_page.goto(base + "?id=" + link_id)
+                await self.item_page.goto(base + "?id=" + link_id, timeout=0)
                 restart = await self.login.slider(self.manager_page)
                 if restart:
                     exit("滑块验证码失败，退出")
