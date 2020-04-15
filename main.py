@@ -56,6 +56,8 @@ def run(shop_code):
             MySql.cls_update(t="tb_order_spider", set={"isVerify": 0},
                              c={"isVerify": 2, "fromStore": f})
             page_num = 1
+        if page_num % 10 == 0:
+            loop.run_until_complete(o_l_p_s.set_post_headers())
         loop.run_until_complete(my_async_sleep(20, random_sleep=True))
         loop.run_until_complete(o_d_l_id_s.save_link_id())
         loop.run_until_complete(o_d_p_s.get_page())
