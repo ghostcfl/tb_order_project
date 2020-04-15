@@ -272,6 +272,7 @@ class MySql(object):
                 self._con.rollback()
                 break
             else:
+                self._con.ping(reconnect=True)
                 self._con.commit()
                 break
 
