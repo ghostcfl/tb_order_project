@@ -67,4 +67,4 @@ def run(shop_code):
         loop.run_until_complete(o_d_p_s.get_page())
         loop.run_until_complete(d_o_u.get_page())
     loop.run_until_complete(b.close())
-    loop.close()
+    # loop.close()
