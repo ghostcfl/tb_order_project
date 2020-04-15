@@ -38,7 +38,7 @@ def verify():
                 list_tmp.append(store_trans(fromStore))
                 list_tmp.append(orderNo)
                 l_orderNo.append("|".join(list_tmp))
-                ms.update(t="tb_order_spider", set={'isVerify': 2}, c={'orderNo': orderNo})
+                ms.update(t="tb_order_spider", set={'isVerify': 2, 'isDetaildown': 0}, c={'orderNo': orderNo})
             else:
                 ms.update(t="tb_order_spider", set={'isVerify': 1}, c={'orderNo': orderNo})
                 # print('没有异常数据，验证完成！')
