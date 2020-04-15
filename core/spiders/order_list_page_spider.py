@@ -48,6 +48,12 @@ class OrderListPageSpider(BaseSpider):
         'tabCode': 'latest3Months'
     }
 
+    async def intercept_request(self, req):
+        logout = re.search("login.taobao.com", req.url)
+        if logout:
+            write(flag=self.fromStore + "headers", value="exit")
+        await req.continue_()
+
     async def intercept_response(self, res):
         req = res.request
         if res.url == self.url:
@@ -79,6 +85,8 @@ class OrderListPageSpider(BaseSpider):
                         await self.page.click(".pagination-item-1")
                     else:
                         await self.page.click(".pagination-item-2")
+                elif headers == 'exit':
+                    return 'exit'
                 else:
                     break
             else:
@@ -87,10 +95,14 @@ class OrderListPageSpider(BaseSpider):
         # print(headers)
 
     async def get_page(self, page_num):
+        # page = await self.browser.newPage()
+        # await page.goto("https://trade.taobao.com/trade/itemlist/list_sold_items.htm")
         self.data['pageNum'] = page_num
         while 1:
             headers = read(self.fromStore + "headers")
-            if headers:
+            if headers == 'exit':
+                return headers
+            elif headers:
                 logger.info("开始订单列表第 " + str(page_num) + " 页爬取")
                 logger.info(store_trans(self.fromStore))
                 r = requests.post(self.url, data=self.data, headers=headers)
@@ -110,7 +122,7 @@ class OrderListPageSpider(BaseSpider):
     async def parse(self, main_orders, page_num):
         # print(main_orders)
         ms = MySql()
-        t = time_zone(["08:00", "20:00", "23:59"])
+        t = time_zone(["08:00", "23:00", "23:59"])
         a = datetime.datetime.now()
         if a < t[0]:
             eoc = EARLIEST_ORDER_CREATE_TIME
