@@ -80,7 +80,7 @@ class TBOrderDetailItem(BaseItem):
         self.unitPrice = kwargs.get('unitPrice')
         self.orderStatus = kwargs.get('orderStatus')
         self.sellNum = kwargs.get('sellNum')
-        self.unitBenefits = kwargs.get('unitBenefits')
+        self.unitBenefits = kwargs.get('unitBenefits',0)
         self.isRefund = kwargs.get('isRefund')
         self.refundStatus = kwargs.get('refundStatus')
 

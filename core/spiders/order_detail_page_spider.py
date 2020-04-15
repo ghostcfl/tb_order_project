@@ -27,7 +27,10 @@ class OrderDetailPageSpider(BaseSpider):
 
         results = MySql.cls_get_dict(t="tb_order_spider",
                                      cn=["detailURL", "orderNo"],
-                                     c={"isDetaildown": 0, "fromStore": self.fromStore},
+                                     c={
+                                         #"isDetaildown": 0,
+                                         #"fromStore": self.fromStore,
+                                         'orderNo': '597761517940269700'},
                                      o=["createTime"], om="d")
         for result in results:
             ms = MySql()
@@ -92,9 +95,7 @@ class OrderDetailPageSpider(BaseSpider):
             tb_order_item.save(ms)
             sub_orders = m['mainOrder']['subOrders']
             for i in range(len(sub_orders)):
-                tb_order_detail_item = TBOrderDetailItem(orderNo=orderNo)
-                temp = 0
-                tb_order_detail_item.itemNo = i
+                tb_order_detail_item = TBOrderDetailItem(orderNo=orderNo,itemNo=i)
                 if sub_orders[i]['promotionInfo']:
                     for j in sub_orders[i]['promotionInfo']:
                         for x in j['content']:
@@ -103,8 +104,7 @@ class OrderDetailPageSpider(BaseSpider):
                                     f_prom = re.match("Exercise", v)
                                     p_list = re.findall("-?\d+\.\d+", v)
                                     if p_list and not f_prom:
-                                        temp += float(p_list.pop())
-                tb_order_detail_item.unitBenefits = temp
+                                        tb_order_detail_item.unitBenefits += float(p_list.pop())
                 tb_order_detail_item.save(ms)
             del ms
             await my_async_sleep(seconds=15, random_sleep=True)
@@ -129,6 +129,6 @@ if __name__ == '__main__':
     from settings import STORE_INFO
 
     loop = asyncio.get_event_loop()
-    l, b, p, f = loop.run_until_complete(LoginTB.run(**STORE_INFO['TB']))
+    l, b, p, f = loop.run_until_complete(LoginTB.run(**STORE_INFO['KY']))
     odps = OrderDetailPageSpider(l, b, p, f)
     loop.run_until_complete(odps.get_page())
