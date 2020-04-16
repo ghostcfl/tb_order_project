@@ -88,8 +88,8 @@ def format_attribute(attriblue_list):
             temp.append(
                 attriblue_list[k]['value'].replace("&Omega", "Ω").replace("&middot", "·")
             )
-        temp_ga = "-".join(temp)
-        return temp_ga.replace("（", "(").replace("）", ")")
+    temp_ga = "-".join(temp)
+    return temp_ga.replace("（", "(").replace("）", ")")
 
 
 def status_format(string):
