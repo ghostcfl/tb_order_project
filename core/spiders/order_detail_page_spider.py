@@ -28,9 +28,10 @@ class OrderDetailPageSpider(BaseSpider):
         results = MySql.cls_get_dict(t="tb_order_spider",
                                      cn=["detailURL", "orderNo"],
                                      c={
-                                         #"isDetaildown": 0,
-                                         #"fromStore": self.fromStore,
-                                         'orderNo': '597761517940269700'},
+                                         "isDetaildown": 0,
+                                         "fromStore": self.fromStore,
+                                         # 'orderNo': '597761517940269700'
+                                     },
                                      o=["createTime"], om="d")
         for result in results:
             ms = MySql()
