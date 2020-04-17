@@ -6,7 +6,7 @@ from pyppeteer import errors
 from settings import LAUNCH_SETTING, WIDTH, HEIGHT, S_T_P_L, P_I, U_I, MAIL_RECEIVERS, CAPTCHA
 from settings import CAPTCHA_ERROR, CAPTCHA_ERROR_CLICK, LOGIN_SUBMIT, TEST_SERVER_DB_TEST
 from settings import PHONE_CHECK_INPUT, PHONE_GET_CODE, PHONE_SUBMIT_BTN, CAPTCHA_SUCCESS
-from tools.tools_method import my_sleep
+from tools.tools_method import my_sleep, my_async_sleep
 from tools.logger import logger
 from tools.mail import mail
 from tools.request_user_agent import get_request_user_agent
@@ -25,12 +25,12 @@ class LoginTB(object):
         self.browser = await launch(**LAUNCH_SETTING)
         p = await self.browser.pages()
         self.page = p[0]
-        await self.page.setUserAgent(self.user_agent)
+        # await self.page.setUserAgent(self.user_agent)
         await self.page.setViewport({"width": WIDTH, "height": HEIGHT})
 
     async def new_page(self):
         page = await self.browser.newPage()
-        await page.setUserAgent(self.user_agent)
+        # await page.setUserAgent(self.user_agent)
         await page.setViewport({"width": WIDTH, "height": HEIGHT})
         return page
 
@@ -119,16 +119,10 @@ class LoginTB(object):
                 return frame
         return None
 
-    async def slider(self, page, must_check=0):
+    async def slider(self, page):
         await asyncio.sleep(3)
         frames = page.frames
-        if must_check:
-            while 1:
-                frame = await self.get_nc_frame(frames)
-                if frame:
-                    break
-        else:
-            frame = await self.get_nc_frame(frames)
+        frame = await self.get_nc_frame(frames)
         if frame:
             await page.bringToFront()
             try_times = 0
@@ -143,8 +137,8 @@ class LoginTB(object):
             logger.info("第" + str(try_times) + "次尝试滑动验证码")
             while 1:
                 if try_times > 10:
-                    logger.info("滑动失败退出")
-                    exit("滑动失败退出")
+                    mail("10次滑块验证码失败", "滑块失败", MAIL_RECEIVERS)
+                    return "exit"
                 try_times += 1
                 await asyncio.sleep(1)
                 start_x = random.uniform(x, x + width)
@@ -167,29 +161,11 @@ class LoginTB(object):
                             return 0
                         break
                     else:
+                        await my_async_sleep(2, True)
                         await frame.click(CAPTCHA_ERROR_CLICK)
                         break
-
-                    # try:
-                    #     await frame.waitForSelector(CAPTCHA_SUCCESS, timeout=10000)
-                    # except Exception as e:
-                    #     try:
-                    #         await asyncio.sleep(2)
-                    #         await frame.waitForSelector(CAPTCHA_ERROR, timeout=10000)
-                    #         await asyncio.sleep(2)
-                    #         await frame.click(CAPTCHA_ERROR_CLICK)
-                    #         break
-                    #     except Exception as e:
-                    #         await asyncio.sleep(1)
-                    #         slider = await self.check_captcha(frame)
-                    #         if not slider:
-                    #             logger.info("滑动成功1")
-                    #             frame = await self.get_nc_frame(frames)
-                    #             if not frame:
-                    #                 return 0
-                    # else:
-                    #     await asyncio.sleep(2)
-                    #     return 0
+        else:
+            return 0
 
     async def phone_verify(self, page, fromStore):
         try:
@@ -207,12 +183,12 @@ class LoginTB(object):
                 except Exception as e:
                     str(e)
                     await self.verify(page, fromStore)
-                    await page.goto("https://trade.taobao.com/trade/itemlist/list_sold_items.htm")
-                    await page.waitForSelector(".pagination-mod__show-more-page-button___txdoB", timeout=30000)
                 finally:
                     if page.url == "https://trade.taobao.com/trade/itemlist/list_sold_items.htm":
-                        await page.click(".pagination-mod__show-more-page-button___txdoB")  # 显示全部页码
-                        break
+                        t = await self.slider(self.page)
+                        if not t:
+                            await page.click(".pagination-mod__show-more-page-button___txdoB")  # 显示全部页码
+                            break
             t = await self.slider(page)
             if t:
                 return t
@@ -292,7 +268,7 @@ class LoginTB(object):
 
 
 if __name__ == '__main__':
-    from settings import STORE_KY
+    from settings import STORE_INFO
 
     # lt = LoginTB()
-    asyncio.get_event_loop().run_until_complete(LoginTB.run(**STORE_KY))
+    asyncio.get_event_loop().run_until_complete(LoginTB.run(**STORE_INFO['YJ']))

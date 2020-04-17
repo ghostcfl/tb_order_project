@@ -1,5 +1,6 @@
 class BaseSpider(object):
     completed = 0
+    captcha = False
 
     def __init__(self, login, browser, page, fromStore):
         self.login = login

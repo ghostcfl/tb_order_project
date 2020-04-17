@@ -1,10 +1,11 @@
 import asyncio
-import requests
+import json
+import re
 
 from core.spiders.base_spider import BaseSpider
 from db.my_sql import MySql
 from tools.logger import logger
-from tools.tools_method import store_trans, my_async_sleep
+from tools.tools_method import store_trans, my_async_sleep, read
 from model import PriceTBItem
 from core.spiders.item_manage_page_spider import ItemManagePageSpider
 
@@ -13,6 +14,7 @@ class OrderDetailLinkIDSpider(BaseSpider):
 
     async def save_link_id(self):
         ms = MySql()
+        link_id_new_list = []
         self.completed = 0
         sql = """SELECT url,a.orderNo FROM tb_order_detail_spider a
             JOIN tb_order_spider b ON a.`orderNo`=b.`orderNo`
@@ -41,33 +43,24 @@ class OrderDetailLinkIDSpider(BaseSpider):
                     price_tb_item.shop_id = store_trans(string=self.fromStore, action="code_2_id")
                     price_tb_item.attribute = res['goodsAttribute']
                     price_tb_item.typeabbrev = self.fromStore
-                    # print(price_tb_item.__str__())
-                    do_it = price_tb_item.save(ms)
-                    if do_it:
-                        await ItemManagePageSpider.run(self.login, self.browser, self.page, self.fromStore,
-                                                       price_tb_item.link_id)
                     sql = "update tb_order_detail_spider set link_id='{}' where url like '%{}%'".format(
                         price_tb_item.link_id, order_no
                     )
-                    # print(sql)
                     ms.update(sql=sql)
+                    price_tb_item.save(ms)
+                    await my_async_sleep(3, True)
 
     async def _get_json(self, order_no):
         url = 'https://smf.taobao.com/promotionmonitor/orderPromotionQuery.htm?orderNo=' + order_no
-        cookies = await self.login.get_cookie(self.page)
-        user_agent = await self.browser.userAgent()
-        headers = {
-            'User-Agent': user_agent,
-            'Cookie': cookies
-        }
+        await self.page.bringToFront()
         try:
-            r = requests.get(url=url, headers=headers)
-            x = r.json()
+            await self.page.goto(url)
         except Exception as e:
-            logger.info(order_no + " " + str(e))
+            logger.error(order_no + " link_id_error " + str(e))
             return 0
         else:
-            return x
+            content = await self.page.content()
+            return json.loads(re.findall("<body>(.*?)</body>", content)[0])
 
     @classmethod
     async def run(cls, login, browser, page, from_store):

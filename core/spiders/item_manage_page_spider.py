@@ -37,52 +37,56 @@ class ItemManagePageSpider(BaseSpider):
                 rate = await res.text()
                 await self.parse_item_page(rate=rate)
 
-    async def do_it(self, link_id):
-        base = "https://item.manager.taobao.com/taobao/manager/render.htm"
-        pages = await self.browser.pages()
-        for page in pages:
-            if re.search(r"render.htm", page.url):
-                self.manager_page = page
-                break
-        if not self.manager_page:
-            self.manager_page = await self.login.new_page()
+    @staticmethod
+    def get_need_to_update_link_id(ms):
+        sql = "select link_id from prices_tb where need_to_update=1"
+        results = ms.get_dict(sql=sql)
+        for result in results:
+            yield result['link_id']
 
-        await self.manager_page.bringToFront()
-
-        try:
-            if not re.search(r"render.htm", self.manager_page.url):
-                await self.manager_page.goto(base)
-        except Exception as e:
-            logger.error(str(e) + "manager_page_error")
-            return
-        while 1:
-            await self.manager_page.waitForSelector("input[name='queryItemId']", timeout=0)
-            await self.manager_page.keyboard.press('Escape')
-            await self.manager_page.focus("input[name='queryItemId']")
-            for _ in range(20):
-                await self.manager_page.keyboard.press("Delete")
-                await self.manager_page.keyboard.press("Backspace")
-            await self.manager_page.type("input[name='queryItemId']", str(link_id),
-                                         {'delay': self.login.input_time_random()})
-            await self.manager_page.click(".filter-footer button:first-child")
-            await self.manager_page.waitForResponse("https://item.manager.taobao.com/taobao/manager/table.htm")
-            await asyncio.sleep(1)
-            await self.listening(self.manager_page)
+    async def do_it(self):
+        ms = MySql()
+        await self.page.bringToFront()
+        for link_id in self.get_need_to_update_link_id(ms):
             try:
-                await self.manager_page.waitForSelector(FAST_EDIT_BTN)
-                await self.manager_page.click(FAST_EDIT_BTN)
-                restart = await self.login.slider(self.manager_page)
-                if restart:
-                    exit("滑块验证码失败，退出")
+                await self.page.goto("https://item.manager.taobao.com/taobao/manager/render.htm")
             except Exception as e:
-                str(e)
-                continue
-            else:
-                break
-        while 1:
-            if self.completed == 3:
-                break
-            await asyncio.sleep(1)
+                logger.error(str(e) + "manager_page_error")
+                return
+            while 1:
+                await self.page.waitForSelector("input[name='queryItemId']", timeout=0)
+                await self.page.keyboard.press('Escape')
+                await self.page.focus("input[name='queryItemId']")
+                for _ in range(20):
+                    await self.page.keyboard.press("Delete")
+                    await self.page.keyboard.press("Backspace")
+                await self.page.type("input[name='queryItemId']", str(link_id),
+                                     {'delay': self.login.input_time_random()})
+                await self.page.click(".filter-footer button:first-child")
+                await self.page.waitForResponse("https://item.manager.taobao.com/taobao/manager/table.htm")
+                await asyncio.sleep(1)
+                await self.listening(self.page)
+                try:
+                    await self.page.waitForSelector(FAST_EDIT_BTN)
+                    await self.page.click(FAST_EDIT_BTN)
+                    restart = await self.login.slider(self.page)
+                    if restart:
+                        exit("滑块验证码失败，退出")
+                except Exception as e:
+                    str(e)
+                    continue
+                else:
+                    await self.page.focus("input[name='queryItemId']")
+                    for _ in range(20):
+                        await self.page.keyboard.press("Delete")
+                        await self.page.keyboard.press("Backspace")
+                    break
+            while 1:
+                if self.completed == 4:
+                    break
+                await asyncio.sleep(1)
+            await asyncio.sleep(15)
+        del ms
 
     async def parse_manager_page(self, data, link_id):
         self.price_tb_items = []
@@ -102,35 +106,31 @@ class ItemManagePageSpider(BaseSpider):
                 price_tb_item.stockid = jsonpath(table, '$..skuOuterId')[0]
                 # print(price_tb_item)
                 self.price_tb_items.append(price_tb_item)
+        self.completed = 1
+        # return self.price_tb_items
         await self.goto_tb_item_page()
 
     async def goto_tb_item_page(self):
         link_id = self.price_tb_items[0].link_id
         base = r"https://item.taobao.com/item.htm"
-        pages = await self.browser.pages()
-        for page in pages:
-            if re.search(base, page.url):
-                self.item_page = page
-                break
-        if not self.item_page:
-            self.item_page = await self.login.new_page()
+        page = await self.login.new_page()
         while 1:
             try:
-                await self.listening(self.item_page)
-                await self.item_page.goto(base + "?id=" + link_id, timeout=0)
-                restart = await self.login.slider(self.manager_page)
+                await self.listening(page)
+                await page.goto(base + "?id=" + link_id, timeout=0)
+                restart = await self.login.slider(page)
                 if restart:
-                    exit("滑块验证码失败，退出")
+                    self.completed = 'exit'
             except Exception as e:
                 logger.error(str(e) + "item_page_error")
-                restart = await self.login.slider(self.manager_page)
+                restart = await self.login.slider(page)
                 if restart:
-                    exit("滑块验证码失败，退出")
+                    self.completed = 'exit'
             else:
                 break
         while 1:
-            if self.completed == 3:
-                break
+            if self.completed == 4:
+                await page.close()
             await asyncio.sleep(1)
 
     async def parse_item_page(self, content=None, detail=None, rate=None):
@@ -158,10 +158,10 @@ class ItemManagePageSpider(BaseSpider):
             else:
                 self.price_tb_items[0].shop_id = shop_id
                 self.price_tb_items[0].price_tb = doc('input[name="current_price"]').val()
-            self.completed = 1
+            self.completed = 2
         if detail:
             while 1:
-                if self.completed == 1:
+                if self.completed == 2:
                     break
                 await asyncio.sleep(1)
             logger.debug(detail)
@@ -175,10 +175,10 @@ class ItemManagePageSpider(BaseSpider):
                     for k, v in promo_data[0].items():
                         if k == price_tb_item.attribute_map:
                             price_tb_item.promotionprice = jsonpath(v, '$..price')[0]
-            self.completed = 2
+            self.completed = 3
         if rate:
             while 1:
-                if self.completed == 2:
+                if self.completed == 3:
                     break
                 await asyncio.sleep(1)
             logger.debug(rate)
@@ -187,14 +187,15 @@ class ItemManagePageSpider(BaseSpider):
                 count = re.search('count.*?(\d+)', rate)
                 if count:
                     price_tb_item.rates = count.group(1)
-                # price_tb_item.save(ms)
-                print(price_tb_item)
-            self.completed = 3
+                price_tb_item.need_to_update = 0
+                price_tb_item.save(ms)
+                # print(price_tb_item)
+            self.completed = 4
 
     @classmethod
-    async def run(cls, login, browser, page, from_store, link_id):
+    async def run(cls, login, browser, page, from_store):
         i_m_p_s = ItemManagePageSpider(login, browser, page, from_store)
-        await i_m_p_s.do_it(link_id)
+        await i_m_p_s.do_it()
 
 
 if __name__ == '__main__':
@@ -204,4 +205,4 @@ if __name__ == '__main__':
     loop = asyncio.get_event_loop()
     l, b, p, f = loop.run_until_complete(LoginTB.run(**STORE_INFO['KY']))
     odps = ItemManagePageSpider(l, b, p, f)
-    loop.run_until_complete(odps.do_it('585201625741'))
+    loop.run_until_complete(odps.do_it())

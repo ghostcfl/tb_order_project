@@ -16,21 +16,13 @@ class OrderDetailPageSpider(BaseSpider):
     detail_page = None
 
     async def get_page(self):
-
-        pages = await self.browser.pages()
-        for page in pages:
-            if re.search(r"trade_order_detail.htm", page.url):
-                self.detail_page = page
-                break
-        if not self.detail_page:
-            self.detail_page = await self.login.new_page()
+        await self.page.bringToFront()
 
         results = MySql.cls_get_dict(t="tb_order_spider",
                                      cn=["detailURL", "orderNo"],
                                      c={
                                          "isDetaildown": 0,
                                          "fromStore": self.fromStore,
-                                         # 'orderNo': '597761517940269700'
                                      },
                                      o=["createTime"], om="d")
         for result in results:
@@ -40,7 +32,7 @@ class OrderDetailPageSpider(BaseSpider):
             logger.info("开始订单 " + result["orderNo"] + " 详情爬取")
             while 1:
                 try:
-                    await self.detail_page.goto(tb_order_item.detailURL)
+                    await self.page.goto(tb_order_item.detailURL)
                 except errors.PageError:
                     return 1
                 except errors.TimeoutError:
@@ -48,14 +40,14 @@ class OrderDetailPageSpider(BaseSpider):
                 else:
                     break
             try:
-                await self.detail_page.waitForSelector('#detail-panel', timeout=30000)
+                await self.page.waitForSelector('#detail-panel', timeout=30000)
             except errors.TimeoutError:
-                is_logout = re.search("login\.taobao\.com", self.detail_page.url)
+                is_logout = re.search(r"login.taobao.com", self.page.url)
                 if is_logout:
                     logger.info("登陆状态超时")
                     return 1
                 continue
-            content = await self.detail_page.content()
+            content = await self.page.content()
             a = re.search(r"var data = JSON.parse\('(.*)'\);", content).group(1)
             # a = a.encode("").decode("unicode_escape")
             b = a.replace('\\\\\\"', '')
@@ -96,7 +88,7 @@ class OrderDetailPageSpider(BaseSpider):
             tb_order_item.save(ms)
             sub_orders = m['mainOrder']['subOrders']
             for i in range(len(sub_orders)):
-                tb_order_detail_item = TBOrderDetailItem(orderNo=orderNo,itemNo=i)
+                tb_order_detail_item = TBOrderDetailItem(orderNo=orderNo, itemNo=i)
                 if sub_orders[i]['promotionInfo']:
                     for j in sub_orders[i]['promotionInfo']:
                         for x in j['content']:

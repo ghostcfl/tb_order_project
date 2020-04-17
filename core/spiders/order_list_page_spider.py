@@ -16,37 +16,6 @@ from db.my_sql import MySql
 class OrderListPageSpider(BaseSpider):
     base_url = "https://trade.taobao.com"
     url = 'https://trade.taobao.com/trade/itemlist/asyncSold.htm?event_submit_do_query=1&_input_charset=utf8'
-    data = {
-        'auctionType': '0',
-        'close': '0',
-        'pageNum': '4',
-        'pageSize': '15',
-        'queryMore': 'true',
-        'rxAuditFlag': '0',
-        'rxElectronicAllFlag': '0',
-        'rxElectronicAuditFlag': '0',
-        'rxHasSendFlag': '0',
-        'rxOldFlag': '0',
-        'rxSendFlag': '0',
-        'rxSuccessflag': '0',
-        'rxWaitSendflag': '0',
-        'tradeTag': '0',
-        'useCheckcode': 'false',
-        'useOrderInfo': 'false',
-        'errorCheckcode': 'false',
-        'action': 'itemlist/SoldQueryAction',
-        'prePageNo': '3',
-        'buyerNick': '',
-        'dateBegin': '0',
-        'dateEnd': '0',
-        'logisticsService': '',
-        'orderStatus': '',
-        'queryOrder': 'desc',
-        'rateStatus': '',
-        'refund': '',
-        'sellerNick': '',
-        'tabCode': 'latest3Months'
-    }
 
     async def intercept_request(self, req):
         logout = re.search("login.taobao.com", req.url)
@@ -59,15 +28,13 @@ class OrderListPageSpider(BaseSpider):
         if res.url == self.url:
             a = await res.json()
             if a.get("mainOrders"):
-                logger.info("重置cookies成功")
+                self.captcha = True
+                # logger.info("重置cookies成功")
                 write(flag=self.fromStore + "headers", value=req.headers)
+                await self.parse(a['mainOrders'], a['page']['currentPage'])
+                self.captcha = False
             else:
-                pass
-            # try:
-            #     await self.parse(a['mainOrders'], a['page']['currentPage'])
-            #     write(flag="headers", value=req.headers)
-            # except KeyError:
-            #     logger.error("KeyError")
+                self.captcha = True
 
     async def set_post_headers(self):
         await self.page.bringToFront()
@@ -95,27 +62,64 @@ class OrderListPageSpider(BaseSpider):
         # print(headers)
 
     async def get_page(self, page_num):
-        self.data['pageNum'] = page_num
-        while 1:
-            headers = read(self.fromStore + "headers")
-            if headers == 'exit':
-                return headers
-            elif headers:
-                logger.info("开始订单列表第 " + str(page_num) + " 页爬取")
-                logger.info(store_trans(self.fromStore))
-                r = requests.post(self.url, data=self.data, headers=headers)
-                a = r.json()
-                if a.get("mainOrders"):
-                    await self.parse(a['mainOrders'], a['page']['currentPage'])
-                    logger.info("完成订单列表第 " + str(page_num) + " 页订单爬取")
-                    return self.completed
-                else:
-                    logger.info("headers失效，重置cookies")
-                    await self.set_post_headers()
+        await self.page.bringToFront()
+        logger.info("订单列表页爬虫，第 " + str(page_num) + " 页开始")
+        self.completed = 0
+        try:
+            await self.page.waitForSelector(".pagination-options-go")
+            await self.page.focus(".pagination-options input")
+            for _ in range(3):
+                await self.page.keyboard.press("Delete")
+                await self.page.keyboard.press("Backspace")
+            await self.listening(self.page)
+            await self.page.type(".pagination-options input", str(page_num))
+            await self.page.keyboard.press("Enter")
+            await self.page.waitForResponse(self.url)
+            while self.captcha:
+                t = await self.login.slider(self.page)
+                if t:
+                    return t
+            self.page.waitForSelector(
+                ".pagination-item.pagination-item-" + str(page_num) + ".pagination-item-active",
+                timeout=10000)
+        except Exception as e:
+            if re.search('\"\.pagination-options-go\"', str(e)):
+                t = await self.login.slider(self.page)
+                if t:
+                    return t
             else:
-                logger.info("headers失效，重置cookies")
-                await self.set_post_headers()
-            await asyncio.sleep(10)
+                logger.error(str(e))
+        while not self.completed:
+            await asyncio.sleep(2)
+        logger.info("订单列表页爬虫，第 " + str(page_num) + " 页完成")
+        await my_async_sleep(15, True)
+        return self.completed
+        # while 1:
+        #     if self.completed:
+        #         await my_async_sleep(10, True)
+        #         return self.completed
+        #     await asyncio.sleep(2)
+        # self.data['pageNum'] = page_num
+        # while 1:
+        #     headers = read(self.fromStore + "headers")
+        #     if headers == 'exit':
+        #         return headers
+        #     elif headers:
+        #         logger.info("开始订单列表第 " + str(page_num) + " 页爬取")
+        #         logger.info(store_trans(self.fromStore))
+        #         r = requests.post(self.url, data=self.data, headers=headers)
+        #         a = r.json()
+        #         if a.get("mainOrders"):
+        #             await self.parse(a['mainOrders'], a['page']['currentPage'])
+        #             logger.info("完成订单列表第 " + str(page_num) + " 页订单爬取")
+        #             return self.completed
+        #         else:
+        #             logger.info("headers失效，重置cookies")
+        #             await self.set_post_headers()
+        #     else:
+        #         logger.info("headers失效，重置cookies")
+        #         await self.set_post_headers()
+        #     await asyncio.sleep(10)
 
     async def parse(self, main_orders, page_num):
         # print(main_orders)
@@ -248,135 +252,13 @@ class OrderListPageSpider(BaseSpider):
             await my_async_sleep(15, random_sleep=True)
 
 
-class DelayOrderUpdate(OrderListPageSpider):
-    data = {
-        'auctionType': '0',
-        'close': '0',
-        'pageNum': '1',
-        'pageSize': '15',
-        'queryMore': 'false',
-        'rxAuditFlag': '0',
-        'rxElectronicAllFlag': '0',
-        'rxElectronicAuditFlag': '0',
-        'rxHasSendFlag': '0',
-        'rxOldFlag': '0',
-        'rxSendFlag': '0',
-        'rxSuccessflag': '0',
-        'rxWaitSendflag': '0',
-        'tradeTag': '0',
-        'useCheckcode': 'false',
-        'useOrderInfo': 'false',
-        'errorCheckcode': 'false',
-        'action': 'itemlist/SoldQueryAction',
-        'prePageNo': '2',
-        'buyerNick': '',
-        'dateBegin': '0',
-        'dateEnd': '0',
-        'logisticsService': '',
-        'orderStatus': '',
-        'queryOrder': 'desc',
-        'rateStatus': '',
-        'refund': '',
-        'sellerNick': '',
-        'tabCode': 'latest3Months',
-        'orderId': ''
-    }
-    data_before_3_month = {
-        'action': 'itemlist/SoldHisQueryAction',
-        'auctionType': '0',
-        'buyerNick': '',
-        'close': '0',
-        'dateBegin': '0',
-        'dateEnd': '0',
-        # 'lastStartRow': '2343631319_9223370458391616807_580496388009557599_580496388009557599',
-        'pageNum': '1',
-        'pageSize': '15',
-        'queryMore': 'false',
-        'queryOrder': 'desc',
-        'rxAuditFlag': '0',
-        'rxElectronicAllFlag': '0',
-        'rxElectronicAuditFlag': '0',
-        'rxHasSendFlag': '0',
-        'rxOldFlag': '0',
-        'rxSendFlag': '0',
-        'rxSuccessflag': '0',
-        'rxWaitSendflag': '0',
-        'tabCode': 'before3Months',
-        'tradeTag': '0',
-        'useCheckcode': 'false',
-        'useOrderInfo': 'false',
-        'errorCheckcode': 'false',
-        'orderId': '804126784615181089',
-        'prePageNo': '1'
-    }
-
-    async def get_page(self, page_num=None):
-        while 1:
-            headers = read(self.fromStore + "headers")
-            if headers:
-                days, order_no = self._get_order_info()
-                if days > 90:
-                    data = self.data_before_3_month.copy()
-                else:
-                    data = self.data.copy()
-                if order_no:
-                    logger.info("滞留订单 " + order_no + " 开始爬取")
-                    data['orderId'] = order_no
-                    r = requests.post(self.url, data=data, headers=headers)
-                    a = r.json()
-                    if a.get('mainOrders'):
-                        await self.parse(a['mainOrders'], a['page']['currentPage'])
-                        logger.info("滞留订单 " + order_no + " 爬取完成")
-                        return self.completed
-                    else:
-                        logger.info("headers失效,需要重重置cookies")
-                        await self.set_post_headers()
-                else:
-                    break
-            else:
-                await self.set_post_headers()
-            await asyncio.sleep(15)
-
-    def _get_order_info(self):
-        today = datetime.datetime.now()
-        one_day = datetime.timedelta(minutes=60)
-        earlier_15_minutes = today - one_day
-        updateTime = earlier_15_minutes.strftime("%Y-%m-%d %H:%M:%S")
-        payTime = yesterday("18:00:00")
-        sql = """      
-                               SELECT 
-                               tos.orderNo,createTime
-                               FROM tb_order_spider tos
-                               WHERE  tos.updateTime<'{}'
-                               AND tos.`orderStatus` = '买家已付款' 
-                               AND tos.`fromStore` = '{}' 
-                               AND tos.payTime<'{}'
-                               ORDER BY updateTime;
-                               """.format(updateTime, self.fromStore, payTime)
-        res = MySql.cls_get_dict(sql=sql)
-        order_no = None
-        days = 0
-        if res:
-            order_no = res[0]['orderNo']
-            days = (today - res[0]['createTime']).days
-        return days, order_no
-
-    @classmethod
-    async def run(cls, login, browser, page, from_store):
-        while 1:
-            delay_order_spider = DelayOrderUpdate(login, browser, page, from_store)
-            await delay_order_spider.get_page()
-            await my_async_sleep(15, random_sleep=True)
-
-
 if __name__ == '__main__':
     from core.browser.login_tb import LoginTB
     from settings import STORE_INFO
 
-    delete("KYheaders")
     loop = asyncio.get_event_loop()
     l, b, p, f = loop.run_until_complete(LoginTB.run(**STORE_INFO['KY']))
-    dou = DelayOrderUpdate(l, b, p, f)
+    dou = OrderListPageSpider(l, b, p, f)
     tasks = [
         OrderListPageSpider.run(l, b, p, f),
         # DelayOrderUpdate.run(l, b, p, f)
