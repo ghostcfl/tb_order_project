@@ -22,17 +22,6 @@ class BaseItem(abc.ABC):
     def _table_name():
         pass
 
-    def save(self, ms):
-        data = self._pop_null_value()
-        condition = self._condition()
-        res = ms.get(t=self._table_name(), c=condition)
-        if res:
-            ms.update(t=self._table_name(), set=data, c=condition)
-            # ms.print_update_sql(t=self._table_name(), set=data, c=condition)
-        else:
-            ms.insert(t=self._table_name(), d=data)
-            # ms.print_insert_sql(t=self._table_name(), d=data)
-
 
 class TBOrderItem(BaseItem):
     def __init__(self, **kwargs):
@@ -56,7 +45,7 @@ class TBOrderItem(BaseItem):
         self.shippingNo = kwargs.get('shippingNo')
         self.buyerComments = kwargs.get('buyerComments')
         self.fromStore = kwargs.get('fromStore')
-        self.updateTime = kwargs.get('updateTime',time_format())
+        self.updateTime = kwargs.get('updateTime', time_format())
         self.isDetaildown = kwargs.get('isDetaildown')
         self.isVerify = kwargs.get('isVerify')
 
@@ -67,6 +56,20 @@ class TBOrderItem(BaseItem):
     @staticmethod
     def _table_name():
         return "tb_order_spider"
+
+    def save(self, ms):
+        status = ["卖家已发货", "交易成功"]
+        data = self._pop_null_value()
+        condition = self._condition()
+        res = ms.get_dict(t=self._table_name(), c=condition)
+        if res:
+            if data['orderStatus'] in status and res[0]['orderStatus'] == "买家已付款":
+                data['isDetaildown'] = 0
+            ms.update(t=self._table_name(), set=data, c=condition)
+            # ms.print_update_sql(t=self._table_name(), set=data, c=condition)
+        else:
+            ms.insert(t=self._table_name(), d=data)
+            # ms.print_insert_sql(t=self._table_name(), d=data)
 
 
 class TBOrderDetailItem(BaseItem):
@@ -80,7 +83,7 @@ class TBOrderDetailItem(BaseItem):
         self.unitPrice = kwargs.get('unitPrice')
         self.orderStatus = kwargs.get('orderStatus')
         self.sellNum = kwargs.get('sellNum')
-        self.unitBenefits = kwargs.get('unitBenefits',0)
+        self.unitBenefits = kwargs.get('unitBenefits', 0)
         self.isRefund = kwargs.get('isRefund')
         self.refundStatus = kwargs.get('refundStatus')
 
