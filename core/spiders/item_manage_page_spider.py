@@ -97,7 +97,7 @@ class ItemManagePageSpider(BaseSpider):
             for table in tables[0]:
                 price_tb_item = PriceTBItem()
                 price_tb_item.link_id = link_id
-                price_tb_item.description = jsonpath(data, '$..textTitle')[0]
+                price_tb_item.description = jsonpath(data, '$..textTitle')[0].replace("（", "(").replace("）", ")")
                 price_tb_item.skuId = str(jsonpath(table, '$..skuId')[0])
                 price_tb_item.stockid = jsonpath(table, '$..skuOuterId')[0]
                 # print(price_tb_item)
@@ -144,7 +144,7 @@ class ItemManagePageSpider(BaseSpider):
             attr_map = {}
             if items:
                 for item in items:
-                    attr_map[item.attr('data-value')] = item.find('span').text()
+                    attr_map[item.attr('data-value')] = item.find('span').text().replace("（", "(").replace("）", ")")
             if sku_map:
                 sku_dict = json.loads(sku_map.group(1))
                 for k, v in sku_dict.items():
@@ -187,7 +187,8 @@ class ItemManagePageSpider(BaseSpider):
                 count = re.search('count.*?(\d+)', rate)
                 if count:
                     price_tb_item.rates = count.group(1)
-                price_tb_item.save(ms)
+                # price_tb_item.save(ms)
+                print(price_tb_item)
             self.completed = 3
 
     @classmethod
@@ -203,4 +204,4 @@ if __name__ == '__main__':
     loop = asyncio.get_event_loop()
     l, b, p, f = loop.run_until_complete(LoginTB.run(**STORE_INFO['KY']))
     odps = ItemManagePageSpider(l, b, p, f)
-    loop.run_until_complete(odps.do_it('603692235487'))
+    loop.run_until_complete(odps.do_it('585201625741'))
