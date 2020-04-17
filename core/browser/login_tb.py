@@ -9,6 +9,7 @@ from settings import PHONE_CHECK_INPUT, PHONE_GET_CODE, PHONE_SUBMIT_BTN, CAPTCH
 from tools.tools_method import my_sleep
 from tools.logger import logger
 from tools.mail import mail
+from tools.request_user_agent import get_request_user_agent
 from db.my_sql import MySql
 
 
@@ -16,15 +17,20 @@ class LoginTB(object):
     page = None
     browser = None
 
+    def __init__(self):
+        self.user_agent = get_request_user_agent()
+
     async def set_page(self, **kwargs):
         LAUNCH_SETTING['args'].append(kwargs['window_position'])
         self.browser = await launch(**LAUNCH_SETTING)
         p = await self.browser.pages()
         self.page = p[0]
+        await self.page.setUserAgent(self.user_agent)
         await self.page.setViewport({"width": WIDTH, "height": HEIGHT})
 
     async def new_page(self):
         page = await self.browser.newPage()
+        await page.setUserAgent(self.user_agent)
         await page.setViewport({"width": WIDTH, "height": HEIGHT})
         return page
 
