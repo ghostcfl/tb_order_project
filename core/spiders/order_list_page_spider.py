@@ -159,8 +159,9 @@ class OrderListPageSpider(BaseSpider):
         tb_order_item.detailURL = "https:" + main_orders[i]['statusInfo']['operations'][0]['url']
         tb_order_item.orderStatus = main_orders[i]['statusInfo']['text']
         tb_order_item.fromStore = self.fromStore
-        if flag == 1 and jsonpath(main_orders, '$.operations..dataUrl'):
-            data_url = self.base_url + jsonpath(main_orders, '$.operations..dataUrl')[0]
+        url = jsonpath(main_orders, '$[{}].operations..dataUrl'.format(i))
+        if flag == 1 and url:
+            data_url = self.base_url + url[0]
             tb_order_item.sellerFlag = await self.get_flag_text(data_url)
         try:
             tb_order_item.isPhoneOrder = main_orders[i]['payInfo']['icons'][0]['linkTitle']
@@ -380,6 +381,6 @@ if __name__ == '__main__':
     dou = DelayOrderUpdate(l, b, p, f)
     tasks = [
         OrderListPageSpider.run(l, b, p, f),
-        DelayOrderUpdate.run(l, b, p, f)
+        # DelayOrderUpdate.run(l, b, p, f)
     ]
     loop.run_until_complete(asyncio.wait(tasks))
