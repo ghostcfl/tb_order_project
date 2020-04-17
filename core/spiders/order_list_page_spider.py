@@ -95,8 +95,6 @@ class OrderListPageSpider(BaseSpider):
         # print(headers)
 
     async def get_page(self, page_num):
-        # page = await self.browser.newPage()
-        # await page.goto("https://trade.taobao.com/trade/itemlist/list_sold_items.htm")
         self.data['pageNum'] = page_num
         while 1:
             headers = read(self.fromStore + "headers")
