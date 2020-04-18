@@ -11,7 +11,7 @@ class CaptchaCheck(BaseSpider):
             frames = page.frames
             frame = await self.login.get_nc_frame(frames)
             if frame:
-                await self.login.slider()
+                await self.login.slider(page)
 
     @classmethod
     async def run(cls):
