@@ -34,7 +34,7 @@ def run(shop_code):
     tasks = [
         taks_1(browser, delay_order_spider, detail_page_spider, manager_page_spider, from_store, link_id_spider,
                list_page_spider),
-        CaptchaCheck.run()
+        # CaptchaCheck.run()
     ]
     loop.run_until_complete(asyncio.wait(tasks))
 
