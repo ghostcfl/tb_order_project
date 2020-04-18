@@ -10,7 +10,7 @@ def get_logger():
         "handlers": [
             {
                 "sink": sys.stdout,
-                "format": "{time:YYYY-MM-DD HH:mm:ss} | ({level}){message}",
+                "format": "{time:YYYY-MM-DD HH:mm:ss} |  {file}:{line} |({level}){message}",
                 "level": STD_OUT_LOG_LEVER,
             },
             {
