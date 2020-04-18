@@ -1,3 +1,6 @@
+import re
+
+
 class BaseSpider(object):
     completed = 0
     captcha = False
@@ -9,7 +12,10 @@ class BaseSpider(object):
         self.fromStore = fromStore
 
     async def intercept_request(self, req):
-        """截取request请求"""
+        # punish?x5secdata
+        is_captcha = re.search("punish\?x5secdata", req.url)
+        if is_captcha:
+            await self.login.slider(self.page)
         await req.continue_()
 
     async def intercept_response(self, res):

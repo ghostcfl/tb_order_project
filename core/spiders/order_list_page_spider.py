@@ -17,11 +17,7 @@ class OrderListPageSpider(BaseSpider):
     base_url = "https://trade.taobao.com"
     url = 'https://trade.taobao.com/trade/itemlist/asyncSold.htm?event_submit_do_query=1&_input_charset=utf8'
 
-    async def intercept_request(self, req):
-        logout = re.search("login.taobao.com", req.url)
-        if logout:
-            write(flag=self.fromStore + "headers", value="exit")
-        await req.continue_()
+
 
     async def intercept_response(self, res):
         req = res.request
@@ -36,31 +32,6 @@ class OrderListPageSpider(BaseSpider):
             else:
                 self.captcha = True
 
-    async def set_post_headers(self):
-        await self.page.bringToFront()
-        delete(self.fromStore + "headers")
-        while 1:
-            frames = self.page.frames
-            frame = await self.login.get_nc_frame(frames)
-            if not frame:
-                headers = read(flag=self.fromStore + "headers")
-                if not headers:
-                    await self.listening(self.page)
-                    try:
-                        await self.page.waitForSelector(".pagination-item-1.pagination-item-active", timeout=3000)
-                    except Exception as e:
-                        await self.page.click(".pagination-item-1")
-                    else:
-                        await self.page.click(".pagination-item-2")
-                elif headers == 'exit':
-                    return 'exit'
-                else:
-                    break
-            else:
-                await self.login.slider(self.page)
-            await asyncio.sleep(5)
-        # print(headers)
-
     async def get_page(self, page_num):
         await self.page.bringToFront()
         logger.info("订单列表页爬虫，第 " + str(page_num) + " 页开始")
@@ -74,11 +45,11 @@ class OrderListPageSpider(BaseSpider):
             await self.listening(self.page)
             await self.page.type(".pagination-options input", str(page_num))
             await self.page.keyboard.press("Enter")
-            await self.page.waitForResponse(self.url)
-            while self.captcha:
-                t = await self.login.slider(self.page)
-                if t:
-                    return t
+            # await self.page.waitForResponse(self.url)
+            # while self.captcha:
+            #     t = await self.login.slider(self.page)
+            #     if t:
+            #         return t
             self.page.waitForSelector(
                 ".pagination-item.pagination-item-" + str(page_num) + ".pagination-item-active",
                 timeout=10000)

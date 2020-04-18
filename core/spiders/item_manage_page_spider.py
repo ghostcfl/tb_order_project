@@ -16,6 +16,14 @@ class ItemManagePageSpider(BaseSpider):
     item_page = None
     price_tb_items = []
 
+    async def intercept_request(self, req):
+        # punish?x5secdata
+        is_captcha = re.search("punish\?x5secdata", req.url)
+        if is_captcha:
+            await self.login.slider(self.page)
+            await self.login.slider(self.item_page)
+        await req.continue_()
+
     async def intercept_response(self, res):
         req = res.request
         pattern = r'https://item.manager.taobao.com/taobao/manager/fastEdit.htm'
@@ -113,24 +121,24 @@ class ItemManagePageSpider(BaseSpider):
     async def goto_tb_item_page(self):
         link_id = self.price_tb_items[0].link_id
         base = r"https://item.taobao.com/item.htm"
-        page = await self.login.new_page()
+        self.item_page = await self.login.new_page()
         while 1:
             try:
-                await self.listening(page)
-                await page.goto(base + "?id=" + link_id, timeout=0)
-                restart = await self.login.slider(page)
+                await self.listening(self.item_page)
+                await self.item_page.goto(base + "?id=" + link_id, timeout=0)
+                restart = await self.login.slider(self.item_page)
                 if restart:
                     self.completed = 'exit'
             except Exception as e:
                 logger.error(str(e) + "item_page_error")
-                restart = await self.login.slider(page)
+                restart = await self.login.slider(self.item_page)
                 if restart:
                     self.completed = 'exit'
             else:
                 break
         while 1:
             if self.completed == 4:
-                await page.close()
+                await self.item_page.close()
             await asyncio.sleep(1)
 
     async def parse_item_page(self, content=None, detail=None, rate=None):
