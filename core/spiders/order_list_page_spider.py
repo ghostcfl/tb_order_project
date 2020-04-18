@@ -17,8 +17,6 @@ class OrderListPageSpider(BaseSpider):
     base_url = "https://trade.taobao.com"
     url = 'https://trade.taobao.com/trade/itemlist/asyncSold.htm?event_submit_do_query=1&_input_charset=utf8'
 
-
-
     async def intercept_response(self, res):
         req = res.request
         if res.url == self.url:
@@ -50,9 +48,6 @@ class OrderListPageSpider(BaseSpider):
             #     t = await self.login.slider(self.page)
             #     if t:
             #         return t
-            self.page.waitForSelector(
-                ".pagination-item.pagination-item-" + str(page_num) + ".pagination-item-active",
-                timeout=10000)
         except Exception as e:
             if re.search('\"\.pagination-options-go\"', str(e)):
                 t = await self.login.slider(self.page)
@@ -61,36 +56,11 @@ class OrderListPageSpider(BaseSpider):
             else:
                 logger.error(str(e))
         while not self.completed:
+            await self.login.slider(self.page)
             await asyncio.sleep(2)
         logger.info("订单列表页爬虫，第 " + str(page_num) + " 页完成")
         await my_async_sleep(15, True)
         return self.completed
-        # while 1:
-        #     if self.completed:
-        #         await my_async_sleep(10, True)
-        #         return self.completed
-        #     await asyncio.sleep(2)
-        # self.data['pageNum'] = page_num
-        # while 1:
-        #     headers = read(self.fromStore + "headers")
-        #     if headers == 'exit':
-        #         return headers
-        #     elif headers:
-        #         logger.info("开始订单列表第 " + str(page_num) + " 页爬取")
-        #         logger.info(store_trans(self.fromStore))
-        #         r = requests.post(self.url, data=self.data, headers=headers)
-        #         a = r.json()
-        #         if a.get("mainOrders"):
-        #             await self.parse(a['mainOrders'], a['page']['currentPage'])
-        #             logger.info("完成订单列表第 " + str(page_num) + " 页订单爬取")
-        #             return self.completed
-        #         else:
-        #             logger.info("headers失效，重置cookies")
-        #             await self.set_post_headers()
-        #     else:
-        #         logger.info("headers失效，重置cookies")
-        #         await self.set_post_headers()
-        #     await asyncio.sleep(10)
 
     async def parse(self, main_orders, page_num):
         # print(main_orders)

@@ -222,10 +222,10 @@ class LoginTB(object):
 
     async def input_verify_code(self, frame, fromStore, type):
         logger.info("需要要手机验证码")
-        ms = MySql(db_setting=TEST_SERVER_DB_TEST)
-        v_id = random.randint(0, 100)
-        ms.insert(t="phone_verify", d={"id": v_id})
-        mail(fromStore + "手机验证码", fromStore + "登陆需要手机验证码，id:" + str(v_id), MAIL_RECEIVERS)
+        ms = MySql()
+        ms.delete(t='phone_verify', c={'fromStore': fromStore})
+        ms.insert(t="phone_verify", d={"fromStore": fromStore})
+        mail(fromStore + "手机验证码", fromStore + "登陆需要手机验证码", MAIL_RECEIVERS)
         verify_code = "0"
         while 1:
             if type == 0:
@@ -234,9 +234,9 @@ class LoginTB(object):
                 await frame.click(PHONE_GET_CODE[1])
             for i in range(120):
                 await asyncio.sleep(5)
-                verify_code = ms.get_one(t='phone_verify', cn=['verify_code'], c={"id": v_id})
+                verify_code = ms.get_one(t='phone_verify', cn=['verify_code'], c={"fromStore": fromStore})
                 if verify_code != "0":
-                    ms.delete(t='phone_verify', c={'id': v_id})
+                    ms.delete(t='phone_verify', c={'fromStore': fromStore})
                     del ms
                     break
             if verify_code != "0":

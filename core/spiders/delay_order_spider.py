@@ -29,12 +29,13 @@ class DelayOrderUpdate(OrderListPageSpider):
                     await self.listening(self.page)
                     await self.page.click(".button-mod__primary___17-Uv")
                     await self.page.waitForResponse(self.url)
-                    while self.captcha:
-                        t = await self.login.slider(self.page)
-                        if t:
-                            return t
+                    # while self.captcha:
+                    #     t = await self.login.slider(self.page)
+                    #     if t:
+                    #         return t
                         # await self.page.waitForResponse(self.url)
                     while not self.completed:
+                        await self.login.slider(self.page)
                         await asyncio.sleep(2)
                     logger.info("滞留订单爬虫 " + str(order_no) + " 完成")
                     await my_async_sleep(15, True)
