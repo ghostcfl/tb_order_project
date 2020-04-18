@@ -7,6 +7,7 @@ from jsonpath import jsonpath
 from settings import FAST_EDIT_BTN
 from core.spiders.base_spider import BaseSpider
 from tools.logger import logger
+from tools.tools_method import store_trans
 from model import PriceTBItem
 from db.my_sql import MySql
 
@@ -15,14 +16,6 @@ class ItemManagePageSpider(BaseSpider):
     manager_page = None
     item_page = None
     price_tb_items = []
-
-    async def intercept_request(self, req):
-        # punish?x5secdata
-        is_captcha = re.search("punish\?x5secdata", req.url)
-        if is_captcha:
-            await self.login.slider(self.page)
-            await self.login.slider(self.item_page)
-        await req.continue_()
 
     async def intercept_response(self, res):
         req = res.request
@@ -45,56 +38,53 @@ class ItemManagePageSpider(BaseSpider):
                 rate = await res.text()
                 await self.parse_item_page(rate=rate)
 
-    @staticmethod
-    def get_need_to_update_link_id(ms):
-        sql = "select link_id from prices_tb where need_to_update=1"
-        results = ms.get_dict(sql=sql)
-        for result in results:
-            yield result['link_id']
-
     async def do_it(self):
+        shop_id = store_trans(self.fromStore, 'code_2_id')
         ms = MySql()
+        sql = "select link_id from prices_tb where need_to_update=1 and shop_id='{}' limit 1".format(shop_id)
+        link_id = ms.get_one(sql=sql)
+        if not link_id:
+            return 0
         await self.page.bringToFront()
-        for link_id in self.get_need_to_update_link_id(ms):
+
+        try:
+            await self.page.goto("https://item.manager.taobao.com/taobao/manager/render.htm")
+        except Exception as e:
+            logger.error(str(e) + "manager_page_error")
+            return
+        while 1:
+            await self.page.waitForSelector("input[name='queryItemId']", timeout=0)
+            await self.page.keyboard.press('Escape')
+            await self.page.focus("input[name='queryItemId']")
+            for _ in range(20):
+                await self.page.keyboard.press("Delete")
+                await self.page.keyboard.press("Backspace")
+            await self.page.type("input[name='queryItemId']", str(link_id),
+                                 {'delay': self.login.input_time_random()})
+            await self.page.click(".filter-footer button:first-child")
+            await self.page.waitForResponse("https://item.manager.taobao.com/taobao/manager/table.htm")
+            await asyncio.sleep(1)
+            await self.listening(self.page)
             try:
-                await self.page.goto("https://item.manager.taobao.com/taobao/manager/render.htm")
+                await self.page.waitForSelector(FAST_EDIT_BTN)
+                await self.page.click(FAST_EDIT_BTN)
+                restart = await self.login.slider(self.page)
+                if restart:
+                    exit("滑块验证码失败，退出")
             except Exception as e:
-                logger.error(str(e) + "manager_page_error")
-                return
-            while 1:
-                await self.page.waitForSelector("input[name='queryItemId']", timeout=0)
-                await self.page.keyboard.press('Escape')
+                str(e)
+                continue
+            else:
                 await self.page.focus("input[name='queryItemId']")
                 for _ in range(20):
                     await self.page.keyboard.press("Delete")
                     await self.page.keyboard.press("Backspace")
-                await self.page.type("input[name='queryItemId']", str(link_id),
-                                     {'delay': self.login.input_time_random()})
-                await self.page.click(".filter-footer button:first-child")
-                await self.page.waitForResponse("https://item.manager.taobao.com/taobao/manager/table.htm")
-                await asyncio.sleep(1)
-                await self.listening(self.page)
-                try:
-                    await self.page.waitForSelector(FAST_EDIT_BTN)
-                    await self.page.click(FAST_EDIT_BTN)
-                    restart = await self.login.slider(self.page)
-                    if restart:
-                        exit("滑块验证码失败，退出")
-                except Exception as e:
-                    str(e)
-                    continue
-                else:
-                    await self.page.focus("input[name='queryItemId']")
-                    for _ in range(20):
-                        await self.page.keyboard.press("Delete")
-                        await self.page.keyboard.press("Backspace")
-                    break
-            while 1:
-                if self.completed == 4:
-                    break
-                await asyncio.sleep(1)
-            await asyncio.sleep(15)
-        del ms
+                break
+        while 1:
+            if self.completed == 4:
+                break
+            await asyncio.sleep(1)
+        await asyncio.sleep(15)
 
     async def parse_manager_page(self, data, link_id):
         self.price_tb_items = []
@@ -115,7 +105,7 @@ class ItemManagePageSpider(BaseSpider):
                 # print(price_tb_item)
                 self.price_tb_items.append(price_tb_item)
         self.completed = 1
-        # return self.price_tb_items
+        await asyncio.sleep(10)
         await self.goto_tb_item_page()
 
     async def goto_tb_item_page(self):
