@@ -18,19 +18,17 @@ class LoginTB(object):
     browser = None
 
     def __init__(self):
-        self.user_agent = get_request_user_agent()
+        pass
 
     async def set_page(self, **kwargs):
         LAUNCH_SETTING['args'].append(kwargs['window_position'])
         self.browser = await launch(**LAUNCH_SETTING)
         p = await self.browser.pages()
         self.page = p[0]
-        # await self.page.setUserAgent(self.user_agent)
         await self.page.setViewport({"width": WIDTH, "height": HEIGHT})
 
     async def new_page(self):
         page = await self.browser.newPage()
-        # await page.setUserAgent(self.user_agent)
         await page.setViewport({"width": WIDTH, "height": HEIGHT})
         return page
 
