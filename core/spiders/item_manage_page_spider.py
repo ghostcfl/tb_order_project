@@ -17,6 +17,10 @@ class ItemManagePageSpider(BaseSpider):
     item_page = None
     price_tb_items = []
 
+    def __init__(self, login, browser, page, item_page, fromStore):
+        super().__init__(login, browser, page, fromStore)
+        self.item_page = item_page
+
     async def intercept_response(self, res):
         req = res.request
         pattern = r'https://item.manager.taobao.com/taobao/manager/fastEdit.htm'
@@ -48,7 +52,8 @@ class ItemManagePageSpider(BaseSpider):
         await self.page.bringToFront()
 
         try:
-            await self.page.goto("https://item.manager.taobao.com/taobao/manager/render.htm")
+            if self.page.url != "https://item.manager.taobao.com/taobao/manager/render.htm":
+                await self.page.goto("https://item.manager.taobao.com/taobao/manager/render.htm")
         except Exception as e:
             logger.error(str(e) + "manager_page_error")
             return
@@ -111,7 +116,7 @@ class ItemManagePageSpider(BaseSpider):
     async def goto_tb_item_page(self):
         link_id = self.price_tb_items[0].link_id
         base = r"https://item.taobao.com/item.htm"
-        self.item_page = await self.login.new_page()
+        # self.item_page = await self.login.new_page()
         while 1:
             try:
                 await self.listening(self.item_page)
@@ -128,7 +133,7 @@ class ItemManagePageSpider(BaseSpider):
                 break
         while 1:
             if self.completed == 4:
-                await self.item_page.close()
+                break
             await asyncio.sleep(1)
 
     async def parse_item_page(self, content=None, detail=None, rate=None):
@@ -188,6 +193,8 @@ class ItemManagePageSpider(BaseSpider):
                 price_tb_item.need_to_update = 0
                 price_tb_item.save(ms)
                 # print(price_tb_item)
+            self.price_tb_items[0].delete(ms)
+            del ms
             self.completed = 4
 
     @classmethod
@@ -202,5 +209,8 @@ if __name__ == '__main__':
 
     loop = asyncio.get_event_loop()
     l, b, p, f = loop.run_until_complete(LoginTB.run(**STORE_INFO['KY']))
-    odps = ItemManagePageSpider(l, b, p, f)
-    loop.run_until_complete(odps.do_it())
+
+    manager_page = loop.run_until_complete(l.new_page())
+    odps = ItemManagePageSpider(l, b, p,manager_page, f)
+    while 1:
+        loop.run_until_complete(odps.do_it())
