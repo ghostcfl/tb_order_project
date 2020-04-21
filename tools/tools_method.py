@@ -50,6 +50,18 @@ def yesterday(time_str):
     return str(yesterday) + " " + time_str
 
 
+def time_ago(minutes, days=0, hours=0):
+    now = datetime.datetime.now()
+    if days:
+        ago = datetime.timedelta(days=days)
+    elif hours:
+        ago = datetime.timedelta(hours=hours)
+    else:
+        ago = datetime.timedelta(minutes=minutes)
+
+    return (now - ago).strftime("%Y-%m-%d %H:%M:%S")
+
+
 def store_trans(string, action='code_2_name'):
     result_dict = {
         "code_2_name": {
