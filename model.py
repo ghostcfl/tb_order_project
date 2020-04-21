@@ -1,6 +1,6 @@
 import abc
 
-from tools.tools_method import time_format
+from tools.tools_method import time_format, time_ago
 
 
 class BaseItem(abc.ABC):
@@ -144,6 +144,8 @@ class PriceTBItem(BaseItem):
 
     def save(self, ms):
         data = self._pop_null_value()
+        if data['stockid'] == '':
+            return 1
         if data.get('attribute_map'):
             data.pop('attribute_map')
         condition = self._condition()
@@ -157,11 +159,16 @@ class PriceTBItem(BaseItem):
             data['flag'] = 'add'
             data['last_time'] = time_format()
             data['package_number'] = 1
-            data['need_to_update'] = 1
+            if data.get("need_to_update") is None:
+                data['need_to_update'] = 1
             ms.insert(t=self._table_name(), d=data)
             # ms.print_insert_sql(t=self._table_name(), d=data)
 
-
+    def delete(self, ms):
+        sql = "delete from prices_tb where link_id='{}' and shop_id='{}' and SpiderDate<'{}'".format(self.link_id,
+                                                                                               self.shop_id,
+                                                                                               time_ago(5))
+        ms.delete(sql=sql)
 
 
 if __name__ == '__main__':
