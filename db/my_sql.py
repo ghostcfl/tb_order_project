@@ -187,7 +187,9 @@ class MySql(object):
     @classmethod
     def cls_get(cls, db_setting=None, **kwargs):
         ms = MySql(db_setting=db_setting)
-        return ms.get(**kwargs)
+        result = ms.get(**kwargs)
+        del ms
+        return result
 
     def get_one(self, **kwargs):
         return self.get(return_one=True, **kwargs)
@@ -195,7 +197,9 @@ class MySql(object):
     @classmethod
     def cls_get_one(cls, db_setting=None, **kwargs):
         ms = MySql(db_setting=db_setting)
-        return ms.get_one(**kwargs)
+        result = ms.get_one(**kwargs)
+        del ms
+        return result
 
     def get_dict(self, **kwargs):
         return self.get(dict_result=True, **kwargs)
@@ -203,7 +207,9 @@ class MySql(object):
     @classmethod
     def cls_get_dict(cls, db_setting=None, **kwargs):
         ms = MySql(db_setting=db_setting)
-        return ms.get_dict(**kwargs)
+        result = ms.get_dict(**kwargs)
+        del ms
+        return result
 
     def print_get_sql(self, **kwargs):
         self.get(only_sql=True, **kwargs)
@@ -280,6 +286,7 @@ class MySql(object):
     def cls_update(cls, **kwargs):
         ms = MySql()
         ms.update(**kwargs)
+        del ms
 
     def print_update_help(self, **kwargs):
         self.update(help=True, **kwargs)
@@ -352,6 +359,7 @@ class MySql(object):
     def cls_insert(cls, **kwargs):
         ms = MySql()
         ms.insert(**kwargs)
+        del ms
 
     def print_insert_help(self, **kwargs):
         self.insert(help=True, **kwargs)

@@ -7,7 +7,7 @@ from jsonpath import jsonpath
 from core.spiders.base_spider import BaseSpider
 from tools.logger import logger
 from tools.tools_method import time_zone, store_trans, time_format, format_tb_name, format_attribute
-from tools.tools_method import yesterday, write, read, delete, my_async_sleep
+from tools.tools_method import my_async_sleep
 from settings import EARLIEST_ORDER_CREATE_TIME
 from model import TBOrderItem, TBOrderDetailItem
 from db.my_sql import MySql
@@ -24,7 +24,6 @@ class OrderListPageSpider(BaseSpider):
             if a.get("mainOrders"):
                 self.captcha = True
                 # logger.info("重置cookies成功")
-                write(flag=self.fromStore + "headers", value=req.headers)
                 await self.parse(a['mainOrders'], a['page']['currentPage'])
                 self.captcha = False
             else:

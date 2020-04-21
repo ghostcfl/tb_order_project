@@ -220,7 +220,7 @@ class LoginTB(object):
 
     async def input_verify_code(self, frame, fromStore, type):
         logger.info("需要要手机验证码")
-        ms = MySql(db=TEST_SERVER_DB_TEST)
+        ms = MySql(db_setting=TEST_SERVER_DB_TEST)
         ms.delete(t='phone_verify', c={'fromStore': fromStore})
         ms.insert(t="phone_verify", d={"fromStore": fromStore})
         mail(fromStore + "手机验证码", fromStore + "登陆需要手机验证码", MAIL_RECEIVERS)
