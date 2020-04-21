@@ -134,9 +134,8 @@ class LoginTB(object):
             logger.info("条形验证码")
             logger.info("第" + str(try_times) + "次尝试滑动验证码")
             while 1:
-                if try_times > 10:
-                    mail("10次滑块验证码失败", "滑块失败", MAIL_RECEIVERS)
-                    return "exit"
+                if try_times > 15:
+                    raise Exception
                 try_times += 1
                 await asyncio.sleep(1)
                 start_x = random.uniform(x, x + width)
