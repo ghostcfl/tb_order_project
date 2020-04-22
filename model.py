@@ -32,7 +32,7 @@ class TBOrderItem(BaseItem):
         self.sellerFlag = kwargs.get('sellerFlag')
         self.isPhoneOrder = kwargs.get('isPhoneOrder')
         self.actualFee = kwargs.get('actualFee')
-        self.deliverFee = kwargs.get('deliverFee', 0)
+        self.deliverFee = kwargs.get('deliverFee')
         self.detailURL = kwargs.get('detailURL')
         self.orderStatus = kwargs.get('orderStatus')
         self.couponPrice = kwargs.get('couponPrice')
