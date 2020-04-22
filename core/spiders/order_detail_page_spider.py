@@ -55,6 +55,7 @@ class OrderDetailPageSpider(BaseSpider):
             data = b.replace('\\"', '"')
             m = json.loads(data)
             tb_order_item.actualFee = jsonpath(m, '$..actualFee.value')[0]
+            tb_order_item.deliverFee = re.findall('\(快递:(\d+\.\d+)', str(m))[0]
             tb_order_item.orderStatus = status_format(jsonpath(m, '$..statusInfo.text')[0])
             if tb_order_item.orderStatus == '等待买家付款':
                 tb_order_item.isDetaildown = 2
