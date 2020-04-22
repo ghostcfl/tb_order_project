@@ -90,6 +90,7 @@ class OrderDetailPageSpider(BaseSpider):
             sub_orders = m['mainOrder']['subOrders']
             for i in range(len(sub_orders)):
                 tb_order_detail_item = TBOrderDetailItem(orderNo=orderNo, itemNo=i)
+                tb_order_detail_item.unitBenefits = 0
                 if sub_orders[i]['promotionInfo']:
                     for j in sub_orders[i]['promotionInfo']:
                         for x in j['content']:
