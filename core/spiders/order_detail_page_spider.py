@@ -42,6 +42,7 @@ class OrderDetailPageSpider(BaseSpider):
             try:
                 await self.page.waitForSelector('#detail-panel', timeout=30000)
             except errors.TimeoutError:
+                await self.login.slider(self.page)
                 is_logout = re.search(r"login.taobao.com", self.page.url)
                 if is_logout:
                     logger.info("登陆状态超时")
