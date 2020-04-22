@@ -283,8 +283,8 @@ class MySql(object):
                 break
 
     @classmethod
-    def cls_update(cls, **kwargs):
-        ms = MySql()
+    def cls_update(cls, db_setting=None, **kwargs):
+        ms = MySql(db_setting=db_setting)
         ms.update(**kwargs)
         del ms
 
@@ -356,8 +356,8 @@ class MySql(object):
                 break
 
     @classmethod
-    def cls_insert(cls, **kwargs):
-        ms = MySql()
+    def cls_insert(cls, db_setting=None, **kwargs):
+        ms = MySql(db_setting=db_setting)
         ms.insert(**kwargs)
         del ms
 
