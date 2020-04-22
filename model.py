@@ -84,8 +84,8 @@ class TBOrderDetailItem(BaseItem):
         self.orderStatus = kwargs.get('orderStatus')
         self.sellNum = kwargs.get('sellNum')
         self.unitBenefits = kwargs.get('unitBenefits', 0)
-        self.isRefund = kwargs.get('isRefund')
-        self.refundStatus = kwargs.get('refundStatus')
+        self.isRefund = kwargs.get('isRefund', 0)
+        self.refundStatus = kwargs.get('refundStatus', "")
 
     def _condition(self):
         condition = {"orderNo": self.orderNo, "itemNo": self.itemNo}
@@ -166,8 +166,8 @@ class PriceTBItem(BaseItem):
 
     def delete(self, ms):
         sql = "delete from prices_tb where link_id='{}' and shop_id='{}' and SpiderDate<'{}'".format(self.link_id,
-                                                                                               self.shop_id,
-                                                                                               time_ago(5))
+                                                                                                     self.shop_id,
+                                                                                                     time_ago(5))
         ms.delete(sql=sql)
 
 
