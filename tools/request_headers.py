@@ -1,8 +1,9 @@
 # 获得随机的user_agent的请求头
 import requests
 import shelve
-from pyquery import PyQuery
 import random
+import os
+from pyquery import PyQuery
 
 
 def get_request_headers():
@@ -10,16 +11,18 @@ def get_request_headers():
     获取随机的请求头
     :return: headers
     """
-    with shelve.open("user_agent/data") as db:
+    with shelve.open(os.path.dirname(__file__)+"/user_agent/data") as db:
         user_agents = db['user_agent']
     headers = {
         "User-Agent": random.choice(user_agents),
-        "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3",
-        "accept-language": "en-US,en;q=0.9",
-        "accept-encoding": "gzip, deflate",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+        "Accept-Language": "zh-CN,zh;q=0.8,zh-TW;q=0.7,zh-HK;q=0.5,en-US;q=0.3,en;q=0.2",
+        "Accept-Encoding": "gzip, deflate, br",
+        "Connection": "keep-alive",
+        "Host": "item.taobao.com",
+        "Upgrade-Insecure-Requests": "1",
     }
     return headers
-
 
 def set_user_agent():
     """
@@ -45,5 +48,5 @@ def set_user_agent():
     items = doc("ul li a").items()
     list_browsers = [item.text() for item in items if len(item.text()) > 80]
     print(list_browsers)
-    with shelve.open("user_agent/data") as db:
+    with shelve.open(os.path.dirname(__file__)+"/user_agent/data") as db:
         db['user_agent'] = list_browsers

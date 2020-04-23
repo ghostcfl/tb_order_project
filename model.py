@@ -1,6 +1,7 @@
 import abc
+from datetime import date
 
-from tools.tools_method import time_format, time_ago
+from tools.tools_method import time_now, time_ago
 
 
 class BaseItem(abc.ABC):
@@ -45,7 +46,7 @@ class TBOrderItem(BaseItem):
         self.shippingNo = kwargs.get('shippingNo')
         self.buyerComments = kwargs.get('buyerComments')
         self.fromStore = kwargs.get('fromStore')
-        self.updateTime = kwargs.get('updateTime', time_format())
+        self.updateTime = kwargs.get('updateTime', time_now())
         self.isDetaildown = kwargs.get('isDetaildown')
         self.isVerify = kwargs.get('isVerify')
 
@@ -130,7 +131,7 @@ class PriceTBItem(BaseItem):
         self.rates = kwargs.get('rates')
         self.package_number = kwargs.get('package_number')
         self.description = kwargs.get('description')
-        self.SpiderDate = kwargs.get('SpiderDate', time_format())
+        self.SpiderDate = kwargs.get('SpiderDate', time_now())
         self.need_to_update = kwargs.get('need_to_update')
         self.attribute_map = kwargs.get('attribute_map')
 
@@ -157,7 +158,7 @@ class PriceTBItem(BaseItem):
             # ms.print_update_sql(t=self._table_name(), set=data, c=condition)
         else:
             data['flag'] = 'add'
-            data['last_time'] = time_format()
+            data['last_time'] = time_now()
             data['package_number'] = 1
             if data.get("need_to_update") is None:
                 data['need_to_update'] = 1
@@ -165,13 +166,81 @@ class PriceTBItem(BaseItem):
             # ms.print_insert_sql(t=self._table_name(), d=data)
 
     def delete(self, ms):
-        sql = "delete from prices_tb where link_id='{}' and shop_id='{}' and SpiderDate<'{}'".format(self.link_id,
-                                                                                                     self.shop_id,
-                                                                                                     time_ago(5))
+        sql = "delete from prices_tb where " \
+              "link_id='{}' " \
+              "and shop_id='{}' " \
+              "and SpiderDate<'{}'".format(self.link_id, self.shop_id, time_ago(minutes=5))
         ms.delete(sql=sql)
 
 
+class TBMasterItem(BaseItem):
+
+    def __init__(self, **kwargs):
+        self.link_id = kwargs.get("link_id")
+        self.shop_id = kwargs.get("shop_id")
+        self.description = kwargs.get("description")
+        self.price_tb = kwargs.get("price_tb")
+        self.promotionprice = kwargs.get("promotionprice")
+        self.sales = kwargs.get("sales", 0)
+        self.rates = kwargs.get("rates", 0)
+        self.update_date = kwargs.get("update_date", date.today())
+        self.flag = kwargs.get("flag")
+        self.narrative = kwargs.get("narrative")
+
+    @staticmethod
+    def _table_name():
+        return 'tb_master'
+
+    def _condition(self):
+        condition = {"link_id": self.link_id}
+        return condition
+
+    def save(self, ms):
+        data = self._pop_null_value()
+        res = ms.get_dict(t=self._table_name(), c=self._condition())
+        flag = ["update"]
+        narrative = []
+        if res:
+            if abs(float(res[0]['price_tb']) - data['price_tb']) > 0.01:
+                flag.append("price")
+                narrative.append("更新销售价格:[{}]=>[{}]".format(res[0]['price_tb'], data['price_tb']))
+            if abs(float(res[0]['promotionprice']) - data['promotionprice']) > 0.01:
+                flag.append("promotion")
+                narrative.append("更新优惠售价格:[{}]=>[{}]".format(res[0]['promotionprice'], data['promotionprice']))
+            if res[0]['sales'] != data['sales']:
+                flag.append("sale")
+                narrative.append("更新销量:[{}]=>[{}]".format(res[0]['sales'], data['sales']))
+            if res[0]['flag'] == 'XiaJia':
+                flag.append("ShangJia")
+                narrative.append("下架商品重新上架")
+            data['flag'] = "_".join(flag)
+            data['narrative'] = ";".join(narrative)
+            ms.update(t=self._table_name(), set=data, c=self._condition())
+        else:
+            data['flag'] = 'insert'
+            ms.insert(t=self._table_name(), d=data)
+
+    def save_to_record(self, ms):
+        start = 0
+        limit = 1000
+        while 1:
+            column_name = self.__dict__.keys()
+            res = ms.get(t=self._table_name(), cn=list(column_name), l=[str(start * limit), str(limit)])
+            if not res:
+                break
+            d = []
+            for r in res:
+                a = tuple(str(x) for x in r)
+                d.append(str(a))
+            sql = "insert into tb_master_record " + str(tuple(column_name)).replace("'", "") + " values " + ",".join(d)
+            ms.insert(sql=sql)
+            start += 1
+
+
 if __name__ == '__main__':
+    # from db.my_sql import MySql
+    # from settings import TEST_SERVER_DB_TEST
+    # ms = MySql(db_setting=TEST_SERVER_DB_TEST)
+    # t = TBMasterItem()
+    # t.save_to_record(ms)
     pass
-    # i = TBOrderDetailItem(itemNo=2, unitPrice=0, orderNo="")
-    # i.pop_null_value()
