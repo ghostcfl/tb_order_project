@@ -6,7 +6,7 @@ from jsonpath import jsonpath
 
 from core.spiders.base_spider import BaseSpider
 from tools.logger import logger
-from tools.tools_method import time_zone, store_trans, time_format, format_tb_name, format_attribute
+from tools.tools_method import time_zone, store_trans, time_now, format_tb_name, format_attribute
 from tools.tools_method import my_async_sleep
 from settings import EARLIEST_ORDER_CREATE_TIME
 from model import TBOrderItem, TBOrderDetailItem

@@ -1,6 +1,6 @@
 import abc
 
-from tools.tools_method import time_format, time_ago
+from tools.tools_method import time_now, time_ago
 
 
 class BaseItem(abc.ABC):
@@ -45,7 +45,7 @@ class TBOrderItem(BaseItem):
         self.shippingNo = kwargs.get('shippingNo')
         self.buyerComments = kwargs.get('buyerComments')
         self.fromStore = kwargs.get('fromStore')
-        self.updateTime = kwargs.get('updateTime', time_format())
+        self.updateTime = kwargs.get('updateTime', time_now())
         self.isDetaildown = kwargs.get('isDetaildown')
         self.isVerify = kwargs.get('isVerify')
 
@@ -130,7 +130,7 @@ class PriceTBItem(BaseItem):
         self.rates = kwargs.get('rates')
         self.package_number = kwargs.get('package_number')
         self.description = kwargs.get('description')
-        self.SpiderDate = kwargs.get('SpiderDate', time_format())
+        self.SpiderDate = kwargs.get('SpiderDate', time_now())
         self.need_to_update = kwargs.get('need_to_update')
         self.attribute_map = kwargs.get('attribute_map')
 
@@ -157,7 +157,7 @@ class PriceTBItem(BaseItem):
             # ms.print_update_sql(t=self._table_name(), set=data, c=condition)
         else:
             data['flag'] = 'add'
-            data['last_time'] = time_format()
+            data['last_time'] = time_now()
             data['package_number'] = 1
             if data.get("need_to_update") is None:
                 data['need_to_update'] = 1
