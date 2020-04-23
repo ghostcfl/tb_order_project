@@ -50,7 +50,7 @@ def yesterday(time_str):
     return str(yesterday) + " " + time_str
 
 
-def time_ago(minutes, days=0, hours=0):
+def time_ago(minutes=0, days=0, hours=0):
     now = datetime.datetime.now()
     if days:
         ago = datetime.timedelta(days=days)
