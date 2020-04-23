@@ -7,14 +7,14 @@ import os
 import asyncio
 
 
-def time_format(format_string="%Y-%m-%d %H:%M:%S"):
+def time_now(format_string="%Y-%m-%d %H:%M:%S"):
     return datetime.datetime.now().strftime(format_string)
 
 
 def my_sleep(seconds=60, random_sleep=None):
     if random_sleep:
         seconds = random.uniform(1, seconds)
-    print(time_format() + " | ", end="", flush=True)
+    print(time_now() + " | ", end="", flush=True)
     while seconds > 1:
         time.sleep(1)
         print(">", end="", flush=True)
@@ -26,7 +26,7 @@ def my_sleep(seconds=60, random_sleep=None):
 async def my_async_sleep(seconds=60, random_sleep=None):
     if random_sleep:
         seconds = random.uniform(1, seconds)
-    # print(time_format() + " | ", end="", flush=True)
+    # print(time_now() + " | ", end="", flush=True)
     while seconds > 1:
         await asyncio.sleep(1)
         # print(">", end="", flush=True)
@@ -105,12 +105,14 @@ def format_attribute(attriblue_list):
 
 
 def status_format(string):
-    list_name = ["等待买家付款", "买家已付款", "交易关闭", "已发货", "交易成功"]
+    list_name = ["付款未成功", "等待买家付款", "买家已付款", "交易关闭", "已发货", "交易成功"]
     for i in list_name:
         a = re.search(i, string)
         if a:
             if a.group() == "已发货":
                 temp = "卖家已发货"
+            elif a.group() == "付款未成功":
+                temp = "等待买家付款"
             else:
                 temp = a.group()
             return temp
