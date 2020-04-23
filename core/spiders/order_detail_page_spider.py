@@ -72,7 +72,7 @@ class OrderDetailPageSpider(BaseSpider):
                     try:
                         tb_order_item.tradeNo = order_info[i]['value']['value']
                     except KeyError:
-                        tb_order_item = None
+                        tb_order_item.tradeNo = None
                 elif order_info[i]['value']['name'] == '创建时间:':
                     tb_order_item.createTime = order_info[i]['value']['value']
                 # elif order_info[i]['value']['name'] == '发货时间:':
