@@ -73,10 +73,10 @@ class MySql(object):
             pass
 
         try:
-            assert type(kwargs["l"]) is int, "l的数据类型必需是整形(int)"
-            limit_str = " limit " + str(kwargs["l"])
+            assert type(kwargs["l"]) is list, "l的数据类型必需是整形(list)"
+            limit_str = " limit " + ",".join(kwargs["l"])
         except KeyError:
-            limit_str = " limit 1000"
+            limit_str = " limit 0,1000"
 
         try:
             assert type(kwargs["o"]) is list, "o的数据类型必需是列表"
