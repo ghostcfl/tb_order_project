@@ -9,7 +9,6 @@ from settings import PHONE_CHECK_INPUT, PHONE_GET_CODE, PHONE_SUBMIT_BTN, CAPTCH
 from tools.tools_method import my_sleep, my_async_sleep
 from tools.logger import logger
 from tools.mail import mail
-from tools.request_user_agent import get_request_user_agent
 from db.my_sql import MySql
 
 
