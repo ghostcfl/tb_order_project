@@ -138,7 +138,7 @@ class StoreSearchPageSpider(object):
                 tspi = read(flag="tspi")
                 if tspi:
                     tspi['spent_time'] = spent_time
-                    MySql.cls_update(db_setting=test_db, t="tb_search_page_info", set=tspi,c={"shop_id": shop_id})
+                    MySql.cls_update(db_setting=test_db, t="tb_search_page_info", set=tspi, c={"shop_id": shop_id})
                 page_num, used_page_nums, total_page = self._get_page_num(shop_id)
             sql = "UPDATE tb_master SET flag='XiaJia',update_date='{}' WHERE shop_id='{}' AND update_date<'{}'".format(
                 datetime.date.today(), shop_id, datetime.date.today())
@@ -217,3 +217,5 @@ class StoreSearchPageSpider(object):
         s.parse()
 
 
+if __name__ == '__main__':
+    StoreSearchPageSpider.run()
