@@ -107,7 +107,6 @@ class ItemManagePageSpider(BaseSpider):
                 price_tb_item.description = jsonpath(data, '$..textTitle')[0].replace("（", "(").replace("）", ")")
                 price_tb_item.skuId = str(jsonpath(table, '$..skuId')[0])
                 price_tb_item.stockid = jsonpath(table, '$..skuOuterId')[0]
-                # print(price_tb_item)
                 self.price_tb_items.append(price_tb_item)
         self.completed = 1
         await asyncio.sleep(10)
@@ -121,9 +120,6 @@ class ItemManagePageSpider(BaseSpider):
             try:
                 await self.listening(self.item_page)
                 await self.item_page.goto(base + "?id=" + link_id, timeout=0)
-                restart = await self.login.slider(self.item_page)
-                if restart:
-                    self.completed = 'exit'
             except Exception as e:
                 logger.error(str(e) + "item_page_error")
                 restart = await self.login.slider(self.item_page)
@@ -168,16 +164,21 @@ class ItemManagePageSpider(BaseSpider):
                     break
                 await asyncio.sleep(1)
             logger.debug(detail)
+            detail = re.sub(r'span class=\"wl-yen\"', r'span class=\\"wl-yen\\"', detail)
             data = re.search('uccess\((.*?)\);', detail)
+
             x = json.loads(data.group(1))
             promo_data = jsonpath(x, '$..promoData')
             for price_tb_item in self.price_tb_items:
                 price_tb_item.sales = jsonpath(x, '$..soldTotalCount')[0]
                 price_tb_item.typeabbrev = self.fromStore
                 if promo_data and promo_data[0]:
-                    for k, v in promo_data[0].items():
-                        if k == price_tb_item.attribute_map:
-                            price_tb_item.promotionprice = jsonpath(v, '$..price')[0]
+                    if price_tb_item.attribute_map:
+                        for k, v in promo_data[0].items():
+                            if k == price_tb_item.attribute_map:
+                                price_tb_item.promotionprice = jsonpath(v, '$..price')[0]
+                    else:
+                        price_tb_item.promotionprice = jsonpath(x, '$..promoData..price')[0]
             self.completed = 3
         if rate:
             while 1:
@@ -208,9 +209,9 @@ if __name__ == '__main__':
     from settings import STORE_INFO
 
     loop = asyncio.get_event_loop()
-    l, b, p, f = loop.run_until_complete(LoginTB.run(**STORE_INFO['KY']))
+    l, b, p, f = loop.run_until_complete(LoginTB.run(**STORE_INFO['TB']))
 
     manager_page = loop.run_until_complete(l.new_page())
-    odps = ItemManagePageSpider(l, b, p,manager_page, f)
+    odps = ItemManagePageSpider(l, b, p, manager_page, f)
     while 1:
         loop.run_until_complete(odps.do_it())
