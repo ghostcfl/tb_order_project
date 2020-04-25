@@ -152,6 +152,7 @@ class LoginTB(object):
                     except Exception as e:
                         if await frame.J(CAPTCHA_SUCCESS):
                             return 0
+                        await asyncio.sleep(5)
                         slider = await self.check_captcha(page)
                         if not slider:
                             return 0
