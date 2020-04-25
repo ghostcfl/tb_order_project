@@ -136,7 +136,7 @@ class ItemManagePageSpider(BaseSpider):
 
         if content:
             sku_map = re.search('skuMap.*?(\{.*)', content)
-            shop_id = re.search('rstShopId.*?(\d+)', content).group(1)
+            shop_id = store_trans(self.fromStore, 'code_2_id')
             doc = PyQuery(content)
             items = doc("li[data-value]").items()
             logger.debug(items)
