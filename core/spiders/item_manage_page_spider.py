@@ -106,7 +106,8 @@ class ItemManagePageSpider(BaseSpider):
                 price_tb_item.link_id = link_id
                 price_tb_item.description = jsonpath(data, '$..textTitle')[0].replace("（", "(").replace("）", ")")
                 price_tb_item.skuId = str(jsonpath(table, '$..skuId')[0])
-                price_tb_item.stockid = jsonpath(table, '$..skuOuterId')[0]
+                if jsonpath(table, '$..skuOuterId'):
+                    price_tb_item.stockid = jsonpath(table, '$..skuOuterId')[0]
                 self.price_tb_items.append(price_tb_item)
         self.completed = 1
         await asyncio.sleep(10)
