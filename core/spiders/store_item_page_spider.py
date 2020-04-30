@@ -10,7 +10,7 @@ from tools.tools_method import write, read, time_now, store_trans
 from tools.kill_pyppeteer_temp_file import kill_temp_file
 from tools.request_headers import get_user_agent
 from tools.logger import logger
-from settings import TEST_SERVER_DB_TEST, NOT_FREE_PROXY_API, PROXY_APIS
+from settings import TEST_SERVER_DB_TEST, NOT_FREE_PROXY_API, CHROME_PATH
 from db.my_sql import MySql
 
 
@@ -47,13 +47,10 @@ class StoreItemPageSpider(object):
 
     @staticmethod
     def _set_proxy():
-        match, proxy = None, '{"msg":"初始信息"}'
-        for proxy_api in PROXY_APIS:
-            r = requests.get(proxy_api)
-            proxy = re.sub("\s+", "", r.text)  # 获得代理IP
-            match = re.match("^\d+\.\d+\.\d+\.\d+:\d+$", proxy)  # 检测返回的数据是否正确
-            if match:
-                break
+        r = requests.get(NOT_FREE_PROXY_API)
+        proxy = re.sub("\s+", "", r.text)  # 获得代理IP
+        match = re.match("^\d+\.\d+\.\d+\.\d+:\d+$", proxy)  # 检测返回的数据是否正确
+
         if not match:
             # proxy = json.loads(proxy)
             logger.error("获取代理IP失败,原因：" + proxy)
@@ -97,7 +94,7 @@ class StoreItemPageSpider(object):
             proxy = self._set_proxy()
         logger.info("当前代理IP：" + proxy)
         # 获取一个使用代理的浏览器
-        self._browser = await launch(args=[f'--proxy-server={proxy}'])
+        self._browser = await launch(executablePath=CHROME_PATH, args=[f'--proxy-server={proxy}'])
         # self._browser = await launch(autoClose=False, headless=False, args=[f'--proxy-server={proxy}'])
         # 获取一个浏览器的page对象
         self._page = await self._browser.newPage()
