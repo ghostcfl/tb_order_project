@@ -7,6 +7,8 @@ from pyquery import PyQuery
 
 from settings import NOT_FREE_PROXY_API, TEST_SERVER_DB_TEST as test_db, FREE_PROXY_API
 from tools.tools_method import write, read, delete
+from tools.reports import Reports
+from tools.mail import mail
 from db.my_sql import MySql
 from tools.logger import logger
 from model import TBMasterItem
@@ -20,7 +22,7 @@ class StoreSearchPageSpider(object):
 
     @staticmethod
     def _set_proxy():
-        r = requests.get(NOT_FREE_PROXY_API)
+        r = requests.get(FREE_PROXY_API)
         proxy = re.sub("\s+", "", r.text)  # 获得代理IP
         write("proxy", proxy)
 
@@ -143,27 +145,15 @@ class StoreSearchPageSpider(object):
             sql = "UPDATE tb_master SET flag='XiaJia',update_date='{}' WHERE shop_id='{}' AND update_date<'{}'".format(
                 datetime.date.today(), shop_id, datetime.date.today())
             MySql.cls_update(db_setting=test_db, sql=sql)
-        # reports = Reports()
-        # reports.report([ids for ids in self._get_shop_id()])
+        reports = Reports()
+        reports.report([ids for ids in self._get_shop_id()])
 
     def parse(self):
         for html, shop_id, used_page_nums, total_page, page_num in self._get_html():
             doc = PyQuery(html)
-            #  存在未知错误的时候，写错误的HTML写到文件中
-            try:
-                match = re.search("item\dline1", html).group()
-            except Exception as e:
-                logger.error(e)
-                logger.error(shop_id + "错误页码：" + str(page_num))
-                with open("error.html", 'w') as f:
-                    f.write(html)
-                logger.error("未知错误查看error.html文件1")
-                continue
+            match = re.search("item\dline1", html)
             if not match:
-                with open("error.html", 'w') as f:
-                    f.write(html)
-                logger.error(shop_id + "错误页码：" + str(page_num))
-                logger.error("未知错误查看error.html文件2")
+                mail("店铺搜索页爬虫出错", shop_id + "错误页码：" + str(page_num) + "\n" + html)
                 continue
 
             used_page_nums.append(page_num)
@@ -178,13 +168,13 @@ class StoreSearchPageSpider(object):
             try:
                 total_page_num = re.search("\d+\/(\d+)", num).group(1)
             except Exception as e:
-                pass
+                logger.error(str(e))
             else:
                 if int(total_page_num) != int(total_page):
                     tspi['total_page'] = total_page_num
                     write(flag="tspi", value=tspi)
 
-            items = doc("." + match + " dl.item").items()
+            items = doc("." + match.group() + " dl.item").items()
             ms = MySql(db_setting=test_db)
             for i in items:
                 tb_master_item = TBMasterItem()
