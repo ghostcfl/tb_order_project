@@ -12,6 +12,7 @@ from tools.mail import mail
 from db.my_sql import MySql
 from tools.logger import logger
 from model import TBMasterItem
+from settings import MAIL_RECEIVERS
 
 
 class StoreSearchPageSpider(object):
@@ -125,7 +126,7 @@ class StoreSearchPageSpider(object):
                             self._set_proxy()
                         proxies = {"https": "https://{}".format(proxy)}
                         r = session.get(url=url, params=params, cookies=cookies, headers=headers, proxies=proxies,
-                                        stream=True)
+                                        stream=True, timeout=30)
                     except Exception as e:
                         logger.error(str(e))
                         self._set_proxy()
@@ -141,7 +142,7 @@ class StoreSearchPageSpider(object):
                 if tspi:
                     tspi['spent_time'] = spent_time
                     MySql.cls_update(db_setting=test_db, t="tb_search_page_info", set=tspi, c={"shop_id": shop_id})
-                page_num, used_page_nums, total_page = self._get_page_num(shop_id)
+                page_num, used_page_nums, total_page, sp_time = self._get_page_num(shop_id)
             sql = "UPDATE tb_master SET flag='XiaJia',update_date='{}' WHERE shop_id='{}' AND update_date<'{}'".format(
                 datetime.date.today(), shop_id, datetime.date.today())
             MySql.cls_update(db_setting=test_db, sql=sql)
@@ -153,7 +154,7 @@ class StoreSearchPageSpider(object):
             doc = PyQuery(html)
             match = re.search("item\dline1", html)
             if not match:
-                mail("店铺搜索页爬虫出错", shop_id + "错误页码：" + str(page_num) + "\n" + html)
+                mail("店铺搜索页爬虫出错", shop_id + "错误页码：" + str(page_num) + "\n" + html, MAIL_RECEIVERS)
                 continue
 
             used_page_nums.append(page_num)
@@ -197,7 +198,7 @@ class StoreSearchPageSpider(object):
                     tb_master_item.price_tb = cprice
                     tb_master_item.promotionprice = sprice
 
-                # print(tb_master_item)
+                print(tb_master_item)
                 tb_master_item.save(ms)
             del ms
 
