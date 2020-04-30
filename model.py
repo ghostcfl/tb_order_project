@@ -238,9 +238,9 @@ class TBMasterItem(BaseItem):
 
 
 if __name__ == '__main__':
-    # from db.my_sql import MySql
-    # from settings import TEST_SERVER_DB_TEST
-    # ms = MySql(db_setting=TEST_SERVER_DB_TEST)
-    # t = TBMasterItem()
-    # t.save_to_record(ms)
+    from db.my_sql import MySql
+    from settings import TEST_SERVER_DB_TEST
+    ms = MySql(db_setting=TEST_SERVER_DB_TEST)
+    t = TBMasterItem()
+    t.save_to_record(ms)
     pass
