@@ -3,6 +3,7 @@ import schedule
 from core.spiders.store_search_page_spider import StoreSearchPageSpider
 
 if __name__ == '__main__':
+    StoreSearchPageSpider.run()
     schedule.every().day.at("18:00").do(StoreSearchPageSpider.run)
     while 1:
         schedule.run_pending()

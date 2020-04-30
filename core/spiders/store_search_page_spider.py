@@ -104,7 +104,7 @@ class StoreSearchPageSpider(object):
             return random.choice(list_result), used_page_nums, total_page, result[0]['spent_time']
         else:
             # 如果没有未采集的页码，则表示当前店铺的所有页码全部采集完成
-            return 0, 0, 0
+            return 0, 0, 0, 0
 
     def _get_html(self):
         for shop_id in self._get_shop_id():
