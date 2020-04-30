@@ -22,7 +22,7 @@ class StoreSearchPageSpider(object):
 
     @staticmethod
     def _set_proxy():
-        r = requests.get(FREE_PROXY_API)
+        r = requests.get(NOT_FREE_PROXY_API)
         proxy = re.sub("\s+", "", r.text)  # 获得代理IP
         write("proxy", proxy)
 
@@ -90,7 +90,7 @@ class StoreSearchPageSpider(object):
             result = ms.get_dict(t="tb_search_page_info", c={"shop_id": shop_id})
 
         if result[0]['last_date'] < datetime.date.today():
-            ms.update(t="tb_search_page_info", set={"used_page_nums": "0"}, c={"shop_id": shop_id})
+            ms.update(t="tb_search_page_info", set={"used_page_nums": "0", "spent_time": 0}, c={"shop_id": shop_id})
             result = ms.get_dict(t="tb_search_page_info", c={"shop_id": shop_id})
         #  获取已采集的数据的页码列表
         used_page_nums = [int(x) for x in result[0]['used_page_nums'].split(",")]
@@ -100,7 +100,7 @@ class StoreSearchPageSpider(object):
         list_result = list(set_a - set_b)  # 未采集数据的页码列表
         if list_result:
             # 返回一个随机的未采集数据的页码，已采集的页码集合，和总的页码数
-            return random.choice(list_result), used_page_nums, total_page
+            return random.choice(list_result), used_page_nums, total_page, result[0]['spent_time']
         else:
             # 如果没有未采集的页码，则表示当前店铺的所有页码全部采集完成
             return 0, 0, 0
@@ -112,7 +112,7 @@ class StoreSearchPageSpider(object):
             if not curls:
                 continue
             curl = random.choice(curls)
-            page_num, used_page_nums, total_page = self._get_page_num(shop_id)
+            page_num, used_page_nums, total_page, sp_time = self._get_page_num(shop_id)
             session = requests.Session()
             while page_num:
                 delete(flag='tspi')
@@ -136,7 +136,7 @@ class StoreSearchPageSpider(object):
                 html = r.text.replace("\\", "")
                 html = re.sub("jsonp\d+\(\"|\"\)", "", html)
                 yield html, shop_id, used_page_nums, total_page, page_num
-                spent_time = int(time.time() - start_time)
+                spent_time = int(time.time() - start_time) + sp_time
                 tspi = read(flag="tspi")
                 if tspi:
                     tspi['spent_time'] = spent_time
