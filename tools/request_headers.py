@@ -6,15 +6,19 @@ import os
 from pyquery import PyQuery
 
 
+def get_user_agent():
+    with shelve.open(os.path.dirname(__file__) + "/user_agent/data") as db:
+        user_agents = db['user_agent']
+    return random.choice(user_agents)
+
+
 def get_request_headers():
     """
     获取随机的请求头
     :return: headers
     """
-    with shelve.open(os.path.dirname(__file__)+"/user_agent/data") as db:
-        user_agents = db['user_agent']
     headers = {
-        "User-Agent": random.choice(user_agents),
+        "User-Agent": get_user_agent(),
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
         "Accept-Language": "zh-CN,zh;q=0.8,zh-TW;q=0.7,zh-HK;q=0.5,en-US;q=0.3,en;q=0.2",
         "Accept-Encoding": "gzip, deflate, br",
@@ -23,6 +27,7 @@ def get_request_headers():
         "Upgrade-Insecure-Requests": "1",
     }
     return headers
+
 
 def set_user_agent():
     """
@@ -48,5 +53,5 @@ def set_user_agent():
     items = doc("ul li a").items()
     list_browsers = [item.text() for item in items if len(item.text()) > 80]
     print(list_browsers)
-    with shelve.open(os.path.dirname(__file__)+"/user_agent/data") as db:
+    with shelve.open(os.path.dirname(__file__) + "/user_agent/data") as db:
         db['user_agent'] = list_browsers
