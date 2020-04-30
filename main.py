@@ -18,6 +18,7 @@ def run(shop_code):
     try:
         login, browser, page, from_store = loop.run_until_complete(LoginTB.run(**STORE_INFO[shop_code]))
     except Exception as e:
+        logger.error(str(e))
         loop.run_until_complete(browser.close())
         return
 
