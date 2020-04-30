@@ -186,6 +186,8 @@ class LoginTB(object):
                         if not t:
                             await page.click(".pagination-mod__show-more-page-button___txdoB")  # 显示全部页码
                             break
+                    else:
+                        raise Exception
             t = await self.slider(page)
             if t:
                 return t

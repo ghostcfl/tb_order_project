@@ -15,7 +15,11 @@ from db.my_sql import MySql
 
 def run(shop_code):
     loop = asyncio.get_event_loop()
-    login, browser, page, from_store = loop.run_until_complete(LoginTB.run(**STORE_INFO[shop_code]))
+    try:
+        login, browser, page, from_store = loop.run_until_complete(LoginTB.run(**STORE_INFO[shop_code]))
+    except Exception as e:
+        loop.run_until_complete(browser.close())
+        return
 
     list_page = page
     list_page_spider = OrderListPageSpider(login, browser, list_page, from_store)
@@ -31,7 +35,7 @@ def run(shop_code):
 
     manager_page = loop.run_until_complete(login.new_page())
     item_page = loop.run_until_complete(login.new_page())
-    manager_page_spider = ItemManagePageSpider(login, browser, manager_page,item_page, from_store)
+    manager_page_spider = ItemManagePageSpider(login, browser, manager_page, item_page, from_store)
     tasks = [
         taks_1(browser, delay_order_spider, detail_page_spider, manager_page_spider, from_store, link_id_spider,
                list_page_spider),
