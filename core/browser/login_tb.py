@@ -173,21 +173,23 @@ class LoginTB(object):
             await page.goto("https://myseller.taobao.com/home.htm")
         finally:
             await page.waitForSelector("#container", timeout=0)
-            try:
-                await asyncio.sleep(2)
-                await page.goto("https://trade.taobao.com/trade/itemlist/list_sold_items.htm")
-                await page.waitForSelector(".pagination-mod__show-more-page-button___txdoB", timeout=10000)
-            except Exception as e:
-                str(e)
-                await self.verify(page, fromStore)
-            finally:
-                if page.url == "https://trade.taobao.com/trade/itemlist/list_sold_items.htm":
-                    t = await self.slider(self.page)
-                    if not t:
-                        await page.click(".pagination-mod__show-more-page-button___txdoB")  # 显示全部页码
-                else:
-                    await self.browser.close()
-                    raise Exception
+            k = 0
+            while k < 3:
+                k += 1
+                try:
+                    await page.goto("https://trade.taobao.com/trade/itemlist/list_sold_items.htm")
+                    await page.waitForSelector(".pagination-mod__show-more-page-button___txdoB", timeout=10000)
+                except Exception as e:
+                    str(e)
+                    await self.verify(page, fromStore)
+                finally:
+                    if page.url == "https://trade.taobao.com/trade/itemlist/list_sold_items.htm":
+                        t = await self.slider(self.page)
+                        if not t:
+                            await page.click(".pagination-mod__show-more-page-button___txdoB")  # 显示全部页码
+                            break
+            if k >= 3:
+                raise Exception
             t = await self.slider(page)
             if t:
                 return t
