@@ -172,6 +172,7 @@ class ItemManagePageSpider(BaseSpider):
                 x = json.loads(data.group(1))
             else:
                 await self.login.slider(self.item_page)
+                return
             promo_data = jsonpath(x, '$..promoData')
             for price_tb_item in self.price_tb_items:
                 price_tb_item.sales = jsonpath(x, '$..soldTotalCount')[0]

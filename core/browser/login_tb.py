@@ -148,7 +148,7 @@ class LoginTB(object):
                 await page.mouse.down()
                 await page.mouse.move(start_x + random.uniform(300, 400),
                                       start_y + random.uniform(a, 34 - abs(a)),
-                                      {"steps": random.randint(30, 100)})
+                                      {"steps": random.randint(100, 200)})
                 await page.mouse.up()
                 while 1:
                     try:
