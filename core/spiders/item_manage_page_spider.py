@@ -168,8 +168,10 @@ class ItemManagePageSpider(BaseSpider):
             logger.debug(detail)
             detail = re.sub(r'span class=\"wl-yen\"', r'span class=\\"wl-yen\\"', detail)
             data = re.search('uccess\((.*?)\);', detail)
-
-            x = json.loads(data.group(1))
+            if data:
+                x = json.loads(data.group(1))
+            else:
+                await self.login.slider(self.item_page)
             promo_data = jsonpath(x, '$..promoData')
             for price_tb_item in self.price_tb_items:
                 price_tb_item.sales = jsonpath(x, '$..soldTotalCount')[0]
