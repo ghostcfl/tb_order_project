@@ -6,7 +6,7 @@ from pyppeteer import errors
 from pyppeteer import launch
 from pyquery import PyQuery
 
-from tools.tools_method import write, read, time_now, store_trans
+from tools.tools_method import write, read, time_now, store_trans, time_ago
 from tools.kill_pyppeteer_temp_file import kill_temp_file
 from tools.request_headers import get_user_agent
 from tools.logger import logger
@@ -130,6 +130,8 @@ class StoreItemPageSpider(object):
                 ms.update(t="prices_tb", set=self._item, c={"link_id": self._item['link_id']})
             else:
                 self._item['stockid'] = "no_match"
+                self._item['SpiderDate'] = time_ago(minutes=60)
+                self._item['need_to_update'] = 1
                 ms.insert(t="prices_tb", d=self._item)
             logger.info(self._item)
         else:
@@ -160,6 +162,8 @@ class StoreItemPageSpider(object):
                     ms.update(t="prices_tb", set=sku_result, c={"skuId": sku_result['skuId']})
                 else:
                     sku_result['stockid'] = "no_match" + str(count)
+                    sku_result['SpiderDate'] = time_ago(minutes=60)
+                    sku_result['need_to_update'] = 1
                     ms.insert(t="prices_tb", d=sku_result)
                     count += 1
                 logger.info(sku_result)

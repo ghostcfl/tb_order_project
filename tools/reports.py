@@ -4,11 +4,12 @@ from tools.mail import mail
 from settings import MAIL_RECEIVERS
 from settings import STORE_INFO
 
-MAIL_RECEIVERS.append("szjavali@qq.com")
-mail_receivers_ky = MAIL_RECEIVERS.copy()
-mail_receivers_yk = MAIL_RECEIVERS.copy()
-mail_receivers_yj = MAIL_RECEIVERS.copy()
-mail_receivers_tb = MAIL_RECEIVERS.copy()
+receivers = MAIL_RECEIVERS.copy()
+receivers.append("szjavali@qq.com")
+mail_receivers_ky = receivers.copy()
+mail_receivers_yk = receivers.copy()
+mail_receivers_yj = receivers.copy()
+mail_receivers_tb = receivers.copy()
 mail_receivers_ky.append(STORE_INFO['KY']['manager_mail'])
 mail_receivers_yk.append(STORE_INFO['YK']['manager_mail'])
 mail_receivers_yj.append(STORE_INFO['YJ']['manager_mail'])
