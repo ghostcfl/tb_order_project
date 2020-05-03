@@ -1,6 +1,7 @@
 # 获得随机的user_agent的请求头
 import requests
 import shelve
+import re
 import random
 import os
 from pyquery import PyQuery
@@ -51,7 +52,8 @@ def set_user_agent():
     html = response.text
     doc = PyQuery(html)
     items = doc("ul li a").items()
-    list_browsers = [item.text() for item in items if len(item.text()) > 80]
+    list_browsers = [item.text() for item in items if
+                     len(item.text()) > 80 and not re.search('pad|phone', item.text(), re.I)]
     print(list_browsers)
     with shelve.open(os.path.dirname(__file__) + "/user_agent/data") as db:
         db['user_agent'] = list_browsers

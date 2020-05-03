@@ -193,6 +193,7 @@ class LoginTB(object):
                             await page.click(".pagination-mod__show-more-page-button___txdoB")  # 显示全部页码
                             break
             if k >= 3:
+                await self.browser.close()
                 raise Exception
             t = await self.slider(page)
             if t:
