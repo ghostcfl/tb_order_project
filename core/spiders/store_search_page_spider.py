@@ -23,7 +23,7 @@ class StoreSearchPageSpider(object):
 
     @staticmethod
     def _set_proxy():
-        r = requests.get(NOT_FREE_PROXY_API)
+        r = requests.get(FREE_PROXY_API)
         proxy = re.sub("\s+", "", r.text)  # 获得代理IP
         write("proxy", proxy)
 
@@ -155,7 +155,7 @@ class StoreSearchPageSpider(object):
             match = re.search("item\dline1", html)
             if not match:
                 mail("店铺搜索页爬虫出错", shop_id + "错误页码：" + str(page_num) + "\n" + html, MAIL_RECEIVERS)
-                continue
+                exit("店铺搜索页爬虫出错")
 
             used_page_nums.append(page_num)
             used_page_nums.sort()

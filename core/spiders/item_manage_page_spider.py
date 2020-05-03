@@ -52,7 +52,7 @@ class ItemManagePageSpider(BaseSpider):
         await self.page.bringToFront()
 
         try:
-            if self.page.url != "https://item.manager.taobao.com/taobao/manager/render.htm":
+            if re.search("https://item.manager.taobao.com/taobao/manager/render.htm", self.page.url):
                 await self.page.goto("https://item.manager.taobao.com/taobao/manager/render.htm")
         except Exception as e:
             logger.error(str(e) + "manager_page_error")
