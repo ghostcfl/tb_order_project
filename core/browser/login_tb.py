@@ -113,6 +113,10 @@ class LoginTB(object):
         for frame in frames:
             slider = await frame.J(CAPTCHA)
             if slider:
+                try:
+                    await frame.waitForSelector(CAPTCHA, visible=True, timeout=20000)
+                except errors.TimeoutError:
+                    return None
                 return frame
         return None
 
