@@ -77,7 +77,9 @@ class OrderListPageSpider(BaseSpider):
             continue_code = 0  # 有些订单的商品,在未付款时就已经退掉了,所以直接直接将数据进行删除
             # 解析并保存订单到数据库
             sub_orders, tb_order_item = await self.parse_order_item(i, main_orders, ms)
-            # 解析并保存订单详细商品到数据库
+            if not sub_orders:
+                return
+                # 解析并保存订单详细商品到数据库
             await self.parse_order_detail_item(continue_code, i, main_orders, sub_orders, tb_order_item, ms)
 
             date = datetime.date.today()
@@ -105,6 +107,8 @@ class OrderListPageSpider(BaseSpider):
         if flag == 1 and url:
             data_url = self.base_url + url[0]
             tb_order_item.sellerFlag = await self.get_flag_text(data_url)
+            if tb_order_item.sellerFlag == 'error':
+                return 0, 0
         try:
             tb_order_item.isPhoneOrder = main_orders[i]['payInfo']['icons'][0]['linkTitle']
         except KeyError:
@@ -171,8 +175,13 @@ class OrderListPageSpider(BaseSpider):
             'User-Agent': user_agent,
             'Cookie': cookies
         }
-        r = requests.get(url=data_url, headers=headers)
-        x = r.json()
+        try:
+            r = requests.get(url=data_url, headers=headers)
+            x = r.json()
+        except Exception as e:
+            logger.error(str(e))
+            self.completed = 'exit'
+            return 'error'
         return x.get("tip")
 
     @classmethod
