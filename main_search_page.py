@@ -6,7 +6,7 @@ from core.spiders.store_search_page_spider import StoreSearchPageSpider
 from tools.tools_method import time_zone
 
 if __name__ == '__main__':
-    t = time_zone(["18:00"])
+    t = time_zone(["17:30"])
     if datetime.datetime.now() > t[0]:
         StoreSearchPageSpider.run()
     schedule.every().day.at("17:30").do(StoreSearchPageSpider.run)
