@@ -110,9 +110,11 @@ class StoreItemPageSpider(object):
             pass
         except errors.PageError:
             self._set_proxy()
+            await self._browser.close()
             return
         while self.exit_signal:
             await asyncio.sleep(50)
+        await self._browser.close()
 
     async def parse(self, html):
         ms = MySql()
