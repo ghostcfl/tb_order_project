@@ -79,19 +79,36 @@ class Reports(object):
                 flag_report_groups.reverse()
 
                 if shop_id in ["115443253", "33817767"]:
-                    mail_container["KY"]['mail_content'] += "|".join(flag_report_groups) + "\n"
+                    mail_container["KY"]['mail_content'] += "|".join(flag_report_groups)
+                    mail_container["KY"]['mail_content'] += self.insert_link(shop_id, ms)
                 elif shop_id in ["34933991", "131282813"]:
-                    mail_container["TB"]['mail_content'] += "|".join(flag_report_groups) + "\n"
+                    mail_container["TB"]['mail_content'] += "|".join(flag_report_groups)
+                    mail_container["TB"]['mail_content'] += self.insert_link(shop_id, ms)
                 elif shop_id in ["68559944", "60299985"]:
-                    mail_container["YJ"]['mail_content'] += "|".join(flag_report_groups) + "\n"
+                    mail_container["YJ"]['mail_content'] += "|".join(flag_report_groups)
+                    mail_container["YJ"]['mail_content'] += self.insert_link(shop_id, ms)
                 else:
-                    mail_container["YK"]['mail_content'] += "|".join(flag_report_groups) + "\n"
+                    mail_container["YK"]['mail_content'] += "|".join(flag_report_groups)
+                    mail_container["YK"]['mail_content'] += self.insert_link(shop_id, ms)
         return mail_container
+
+    def insert_link(self, shop_id, ms):
+        sql = "SELECT link_id FROM tb_master WHERE flag ='{}' AND shop_id='{}'".format('insert', shop_id)
+        results = ms.get_dict(sql=sql)
+        if results:
+            result = "\n新增链接：\n"
+            for r in results:
+                result += f"https://item.taobao.com/item.htm?id={r['link_id']}\n"
+                # print(r['link_id'])
+            return result
+        else:
+            return ""
 
     def report(self, shop_ids):
         r = self.get(shop_ids=shop_ids)
         for k, v in r.items():
             mail(v.get("title"), v.get("mail_content"), v.get("receivers"))
+            # print(v.get("mail_content"))
     # mail("店铺搜索页爬虫报告", r, MAIL_RECEIVERS)
     # [Format._write(shop_id=shop_id, flag="mail", value=1) for shop_id in shop_ids]
 
@@ -100,3 +117,6 @@ if __name__ == '__main__':
     report = Reports()
     ids = ["115443253", "33817767", "34933991", "131282813", "68559944", "60299985", "197444037"]
     report.report(ids)
+    #
+    # ms = MySql(db_setting=TEST_SERVER_DB_TEST)
+    # report.insert_link("115443253", ms)
