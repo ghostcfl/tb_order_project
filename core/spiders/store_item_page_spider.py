@@ -2,6 +2,7 @@ import requests
 import re
 import json
 import asyncio
+import subprocess
 from pyppeteer import errors
 from pyppeteer import launch
 from pyquery import PyQuery
@@ -192,6 +193,8 @@ class StoreItemPageSpider(object):
     @classmethod
     def run(cls):
         kill_temp_file()
+        subprocess.run("taskkill /F /IM chrome.exe", stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                       stderr=subprocess.PIPE)
         s = StoreItemPageSpider()
         asyncio.get_event_loop().run_until_complete(s.init_page_to_listening())
 
