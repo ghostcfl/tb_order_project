@@ -9,7 +9,7 @@ if __name__ == '__main__':
     t = time_zone(["18:00"])
     if datetime.datetime.now() > t[0]:
         StoreSearchPageSpider.run()
-    schedule.every().day.at("18:00").do(StoreSearchPageSpider.run)
+    schedule.every().day.at("17:30").do(StoreSearchPageSpider.run)
     while 1:
         schedule.run_pending()
         s = time.asctime()
