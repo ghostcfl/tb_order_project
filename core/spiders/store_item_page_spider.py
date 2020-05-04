@@ -95,7 +95,7 @@ class StoreItemPageSpider(object):
             proxy = self._set_proxy()
         logger.info("当前代理IP：" + proxy)
         # 获取一个使用代理的浏览器
-        self._browser = await launch(headless=False, executablePath=CHROME_PATH, args=[f'--proxy-server={proxy}'])
+        self._browser = await launch(headless=True, executablePath=CHROME_PATH, args=[f'--proxy-server={proxy}'])
         # self._browser = await launch(autoClose=False, headless=False, args=[f'--proxy-server={proxy}'])
         # 获取一个浏览器的page对象
         self._page = await self._browser.newPage()
@@ -111,11 +111,9 @@ class StoreItemPageSpider(object):
             pass
         except errors.PageError:
             self._set_proxy()
-            await self._browser.close()
             return
         while self.exit_signal:
             await asyncio.sleep(50)
-        await self._browser.close()
 
     async def parse(self, html):
         ms = MySql()

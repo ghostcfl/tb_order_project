@@ -115,6 +115,7 @@ class ItemManagePageSpider(BaseSpider):
         await self.goto_tb_item_page()
 
     async def goto_tb_item_page(self):
+        await self.item_page.bringToFront()
         link_id = self.price_tb_items[0].link_id
         base = r"https://item.taobao.com/item.htm"
         # self.item_page = await self.login.new_page()
@@ -214,7 +215,7 @@ if __name__ == '__main__':
     from settings import STORE_INFO
 
     loop = asyncio.get_event_loop()
-    l, b, p, f = loop.run_until_complete(LoginTB.run(**STORE_INFO['TB']))
+    l, b, p, f = loop.run_until_complete(LoginTB.run(**STORE_INFO['KY']))
 
     manager_page = loop.run_until_complete(l.new_page())
     odps = ItemManagePageSpider(l, b, p, manager_page, f)
