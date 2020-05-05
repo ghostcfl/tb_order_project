@@ -5,7 +5,7 @@ import random
 import time
 from pyquery import PyQuery
 
-from settings import NOT_FREE_PROXY_API, TEST_SERVER_DB_TEST as test_db, FREE_PROXY_API
+from settings import NOT_FREE_PROXY_API, TEST_SERVER_DB_TEST as test_db, IP_PROXY_WHITE_LIST
 from tools.tools_method import write, read, delete
 from tools.reports import Reports
 from tools.mail import mail
@@ -25,7 +25,18 @@ class StoreSearchPageSpider(object):
     def _set_proxy():
         r = requests.get(NOT_FREE_PROXY_API)
         proxy = re.sub("\s+", "", r.text)  # 获得代理IP
-        write("proxy", proxy)
+        match = re.match("^\d+\.\d+\.\d+\.\d+:\d+$", proxy)  # 检测返回的数据是否正确
+
+        if not match:
+            # proxy = json.loads(proxy)
+            ip_match = re.search("请添加白名单(\d+\.\d+\.\d+\.\d+)", proxy)
+            if ip_match:
+                ip = ip_match.group(1)
+                requests.get(IP_PROXY_WHITE_LIST + ip)
+            return proxy
+        else:
+            write("item_proxy", proxy)
+            return proxy
 
     @staticmethod
     def _get_curls(shop_id):

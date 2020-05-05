@@ -11,7 +11,7 @@ from tools.tools_method import write, read, time_now, store_trans, time_ago
 from tools.kill_pyppeteer_temp_file import kill_temp_file
 from tools.request_headers import get_user_agent
 from tools.logger import logger
-from settings import TEST_SERVER_DB_TEST, NOT_FREE_PROXY_API, CHROME_PATH
+from settings import TEST_SERVER_DB_TEST, NOT_FREE_PROXY_API, CHROME_PATH,IP_PROXY_WHITE_LIST
 from db.my_sql import MySql
 
 
@@ -54,8 +54,11 @@ class StoreItemPageSpider(object):
 
         if not match:
             # proxy = json.loads(proxy)
-            logger.error("获取代理IP失败,原因：" + proxy)
-            exit("获取代理IP失败")
+            ip_match = re.search("请添加白名单(\d+\.\d+\.\d+\.\d+)", proxy)
+            if ip_match:
+                ip = ip_match.group(1)
+                requests.get(IP_PROXY_WHITE_LIST + ip)
+            return proxy
         else:
             write("item_proxy", proxy)
             return proxy
