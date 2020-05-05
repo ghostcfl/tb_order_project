@@ -33,6 +33,7 @@ class StoreSearchPageSpider(object):
             if ip_match:
                 ip = ip_match.group(1)
                 requests.get(IP_PROXY_WHITE_LIST + ip)
+            write("item_proxy", proxy)
             return proxy
         else:
             write("item_proxy", proxy)
