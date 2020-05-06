@@ -424,6 +424,12 @@ class MySql(object):
                 self._con.commit()
                 break
 
+    @classmethod
+    def cls_delete(cls, db_setting=None, **kwargs):
+        ms = MySql(db_setting=db_setting)
+        ms.delete(**kwargs)
+        del ms
+
     def print_delete_help(self, **kwargs):
         self.delete(help=True, **kwargs)
 

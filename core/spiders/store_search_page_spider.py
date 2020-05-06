@@ -166,6 +166,7 @@ class StoreSearchPageSpider(object):
             doc = PyQuery(html)
             match = re.search("item\dline1", html)
             if not match:
+                MySql.cls_delete(db_setting=test_db, t='tb_search_curl', c={"shop_id": shop_id})
                 mail("店铺搜索页爬虫出错", shop_id + "错误页码：" + str(page_num) + "\n" + html, MAIL_RECEIVERS)
                 exit("店铺搜索页爬虫出错")
 
