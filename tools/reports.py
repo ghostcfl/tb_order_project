@@ -21,12 +21,12 @@ mail_container = {
         "title": "开源 | 育松 | 店铺搜索页面爬虫报告"
     },
     "YJ": {
-        "receivers": mail_receivers_yk,
+        "receivers": mail_receivers_yj,
         "mail_content": "",
         "title": "玉佳 | 信泰微 | 店铺搜索页面爬虫报告"
     },
     "YK": {
-        "receivers": mail_receivers_yj,
+        "receivers": mail_receivers_yk,
         "mail_content": "",
         "title": "玉佳企业店 | 店铺搜索页面爬虫报告"
     },
