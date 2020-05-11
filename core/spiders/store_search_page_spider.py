@@ -146,7 +146,10 @@ class StoreSearchPageSpider(object):
                         continue
                     else:
                         break
-                html = r.text.replace("\\", "")
+                try:
+                    html = r.text.replace("\\", "")
+                except requests.exceptions.ChunkedEncodingError:
+                    continue
                 html = re.sub("jsonp\d+\(\"|\"\)", "", html)
                 yield html, shop_id, used_page_nums, total_page, page_num
                 spent_time = int(time.time() - start_time) + sp_time
