@@ -90,7 +90,7 @@ class StoreItemPageSpider(object):
             results[0]['typeabbrev'] = store_trans(results[0]['shop_id'], 'id_2_code')
             return results[0]
         else:
-            return results
+            exit("已经完成所有的爬取")
 
     async def init_page_to_listening(self):
         # 获取存储在tools/data里的ip代理
