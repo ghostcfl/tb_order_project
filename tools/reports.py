@@ -5,6 +5,10 @@ from settings import MAIL_RECEIVERS
 from settings import STORE_INFO
 
 receivers = MAIL_RECEIVERS.copy()
+# mail_receivers_ky = receivers
+# mail_receivers_yk = receivers
+# mail_receivers_yj = receivers
+# mail_receivers_tb = receivers
 receivers.append("szjavali@qq.com")
 mail_receivers_ky = receivers.copy()
 mail_receivers_yk = receivers.copy()
@@ -79,16 +83,16 @@ class Reports(object):
                 flag_report_groups.reverse()
 
                 if shop_id in ["115443253", "33817767"]:
-                    mail_container["KY"]['mail_content'] += "|".join(flag_report_groups)
+                    mail_container["KY"]['mail_content'] += "|".join(flag_report_groups) + "\n"
                     mail_container["KY"]['mail_content'] += self.insert_link(shop_id, ms)
                 elif shop_id in ["34933991", "131282813"]:
-                    mail_container["TB"]['mail_content'] += "|".join(flag_report_groups)
+                    mail_container["TB"]['mail_content'] += "|".join(flag_report_groups) + "\n"
                     mail_container["TB"]['mail_content'] += self.insert_link(shop_id, ms)
                 elif shop_id in ["68559944", "60299985"]:
-                    mail_container["YJ"]['mail_content'] += "|".join(flag_report_groups)
+                    mail_container["YJ"]['mail_content'] += "|".join(flag_report_groups) + "\n"
                     mail_container["YJ"]['mail_content'] += self.insert_link(shop_id, ms)
                 else:
-                    mail_container["YK"]['mail_content'] += "|".join(flag_report_groups)
+                    mail_container["YK"]['mail_content'] += "|".join(flag_report_groups) + "\n"
                     mail_container["YK"]['mail_content'] += self.insert_link(shop_id, ms)
         return mail_container
 
@@ -96,7 +100,7 @@ class Reports(object):
         sql = "SELECT link_id FROM tb_master WHERE flag ='{}' AND shop_id='{}'".format('insert', shop_id)
         results = ms.get_dict(sql=sql)
         if results:
-            result = "\n新增链接：\n"
+            result = "新增链接：\n"
             for r in results:
                 result += f"https://item.taobao.com/item.htm?id={r['link_id']}\n"
                 # print(r['link_id'])
