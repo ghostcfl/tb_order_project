@@ -120,7 +120,6 @@ class StoreSearchPageSpider(object):
 
     def _get_html(self):
         for shop_id in self._get_shop_id():
-            start_time = time.time()
             curls = self._get_curls(shop_id)
             if not curls:
                 continue
@@ -128,6 +127,7 @@ class StoreSearchPageSpider(object):
             page_num, used_page_nums, total_page, sp_time = self._get_page_num(shop_id)
             session = requests.Session()
             while page_num:
+                start_time = time.time()
                 delete(flag='tspi')
                 url, params, cookies, headers = self.format_request_params(curl['curl'], page_num)
                 while 1:
