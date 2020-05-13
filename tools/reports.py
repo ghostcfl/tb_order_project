@@ -4,43 +4,6 @@ from tools.mail import mail
 from settings import MAIL_RECEIVERS
 from settings import STORE_INFO
 
-receivers = MAIL_RECEIVERS.copy()
-# mail_receivers_ky = receivers
-# mail_receivers_yk = receivers
-# mail_receivers_yj = receivers
-# mail_receivers_tb = receivers
-receivers.append("szjavali@qq.com")
-mail_receivers_ky = receivers.copy()
-mail_receivers_yk = receivers.copy()
-mail_receivers_yj = receivers.copy()
-mail_receivers_tb = receivers.copy()
-mail_receivers_ky.append(STORE_INFO['KY']['manager_mail'])
-mail_receivers_yk.append(STORE_INFO['YK']['manager_mail'])
-mail_receivers_yj.append(STORE_INFO['YJ']['manager_mail'])
-mail_receivers_tb.append(STORE_INFO['TB']['manager_mail'])
-mail_container = {
-    "KY": {
-        "receivers": mail_receivers_ky,
-        "mail_content": "",
-        "title": "开源 | 育松 | 店铺搜索页面爬虫报告"
-    },
-    "YJ": {
-        "receivers": mail_receivers_yj,
-        "mail_content": "",
-        "title": "玉佳 | 信泰微 | 店铺搜索页面爬虫报告"
-    },
-    "YK": {
-        "receivers": mail_receivers_yk,
-        "mail_content": "",
-        "title": "玉佳企业店 | 店铺搜索页面爬虫报告"
-    },
-    "TB": {
-        "receivers": mail_receivers_tb,
-        "mail_content": "",
-        "title": "赛宝 | 优信 | 店铺搜索页面爬虫报告"
-    },
-}
-
 
 class Reports(object):
     translate_dictionary = {
@@ -52,8 +15,48 @@ class Reports(object):
         "ShangJia": "重新上架商品",
     }
 
+    @staticmethod
+    def init_receivers():
+        receivers = MAIL_RECEIVERS.copy()
+        # mail_receivers_ky = receivers
+        # mail_receivers_yk = receivers
+        # mail_receivers_yj = receivers
+        # mail_receivers_tb = receivers
+        receivers.append("szjavali@qq.com")
+        mail_receivers_ky = receivers.copy()
+        mail_receivers_yk = receivers.copy()
+        mail_receivers_yj = receivers.copy()
+        mail_receivers_tb = receivers.copy()
+        mail_receivers_ky.append(STORE_INFO['KY']['manager_mail'])
+        mail_receivers_yk.append(STORE_INFO['YK']['manager_mail'])
+        mail_receivers_yj.append(STORE_INFO['YJ']['manager_mail'])
+        mail_receivers_tb.append(STORE_INFO['TB']['manager_mail'])
+        mail_container = {
+            "KY": {
+                "receivers": mail_receivers_ky,
+                "mail_content": "",
+                "title": "开源 | 育松 | 店铺搜索页面爬虫报告"
+            },
+            "YJ": {
+                "receivers": mail_receivers_yj,
+                "mail_content": "",
+                "title": "玉佳 | 信泰微 | 店铺搜索页面爬虫报告"
+            },
+            "YK": {
+                "receivers": mail_receivers_yk,
+                "mail_content": "",
+                "title": "玉佳企业店 | 店铺搜索页面爬虫报告"
+            },
+            "TB": {
+                "receivers": mail_receivers_tb,
+                "mail_content": "",
+                "title": "赛宝 | 优信 | 店铺搜索页面爬虫报告"
+            },
+        }
+        return mail_container
+
     def get(self, shop_ids):
-        shop_report_groups = []
+        mail_container = self.init_receivers()
         ms = MySql(db_setting=TEST_SERVER_DB_TEST)
 
         for shop_id in shop_ids:
