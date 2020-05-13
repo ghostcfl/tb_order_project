@@ -2,10 +2,10 @@ import asyncio
 import subprocess
 
 from db.my_sql import MySql
-from settings import TEST_SERVER_DB_TEST
+from settings import TEST_SERVER_DB_TEST, SPIDER_ADDRESS, MAIL_RECEIVERS
 from tools.tools_method import time_now, time_ago
 from tools.kill_pyppeteer_temp_file import kill_temp_file
-from settings import SPIDER_ADDRESS
+from tools.mail import mail
 
 
 async def run():
@@ -38,6 +38,7 @@ def restart():
         "shutdown -r -t 60",
         "taskkill /F /IM python.exe",
     ]
+    mail(SPIDER_ADDRESS + "爬虫自动重启", "", MAIL_RECEIVERS)
     for cmd in cmd_list:
         x = subprocess.run(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                            stderr=subprocess.PIPE)
