@@ -125,6 +125,6 @@ if __name__ == '__main__':
     from settings import STORE_INFO
 
     loop = asyncio.get_event_loop()
-    l, b, p, f = loop.run_until_complete(LoginTB.run(**STORE_INFO['KY']))
+    l, b, p, f = loop.run_until_complete(LoginTB.run(**STORE_INFO['YK']))
     odps = OrderDetailPageSpider(l, b, p, f)
     loop.run_until_complete(odps.get_page())
