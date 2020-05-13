@@ -84,7 +84,7 @@ class OrderDetailPageSpider(BaseSpider):
                 tb_order_item.shippingMethod = jsonpath(m, '$..shipType')[0]
                 tb_order_item.shippingNo = jsonpath(m, '$..logisticsNum')[0]
             rec_info = jsonpath(m, '$..tabs..address')[0]
-            tb_order_item.receiverName = re.sub(u'[\uD800-\uDBFF][\uDC00-\uDFFF]|\s', "", rec_info.split("，")[0])
+            tb_order_item.receiverName = rec_info.split("，")[0].replace(" ","")
             tb_order_item.receiverPhone = rec_info.split("，")[1]
             tb_order_item.receiverAddress = "".join(rec_info.split("，")[2:])
             tb_order_item.save(ms)
