@@ -62,7 +62,7 @@ async def taks_1(browser, delay_order_spider, detail_page_spider, manager_page_s
                 break
             await my_async_sleep(20, random_sleep=True)
             await link_id_spider.save_link_id()
-            await manager_page_spider.do_it()
+            # await manager_page_spider.do_it()
             await detail_page_spider.get_page()
             exit_loop = await delay_order_spider.get_page()
             if exit_loop == 'exit':
