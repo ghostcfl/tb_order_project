@@ -28,6 +28,7 @@ async def run():
         if restart_signal:
             restart()
         del ms
+        await asyncio.sleep(60)
 
 
 def restart():
