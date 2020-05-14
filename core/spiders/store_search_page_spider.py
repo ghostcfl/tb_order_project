@@ -45,7 +45,7 @@ class StoreSearchPageSpider(object):
         results = MySql.cls_get_dict(db_setting=test_db, t="tb_search_curl", c={'shop_id': shop_id})
         for res in results:
             curls.append(res)
-        return curls
+        return random.choice(curls)
 
     @staticmethod
     def format_request_params(curl, page_num=2):
@@ -120,13 +120,12 @@ class StoreSearchPageSpider(object):
 
     def _get_html(self):
         for shop_id in self._get_shop_id():
-            curls = self._get_curls(shop_id)
-            if not curls:
-                continue
-            curl = random.choice(curls)
             page_num, used_page_nums, total_page, sp_time = self._get_page_num(shop_id)
             session = requests.Session()
             while page_num:
+                curl = self._get_curls(shop_id)
+                if not curl:
+                    continue
                 start_time = time.time()
                 delete(flag='tspi')
                 url, params, cookies, headers = self.format_request_params(curl['curl'], page_num)
@@ -171,7 +170,7 @@ class StoreSearchPageSpider(object):
             if not match:
                 MySql.cls_delete(db_setting=test_db, t='tb_search_curl', c={"shop_id": shop_id})
                 mail("店铺搜索页爬虫出错", shop_id + "错误页码：" + str(page_num) + "\n" + html, MAIL_RECEIVERS)
-                exit("店铺搜索页爬虫出错")
+                continue
 
             used_page_nums.append(page_num)
             used_page_nums.sort()
