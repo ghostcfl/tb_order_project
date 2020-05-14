@@ -6,7 +6,7 @@ import time
 from pyquery import PyQuery
 
 from settings import NOT_FREE_PROXY_API, TEST_SERVER_DB_TEST as test_db, IP_PROXY_WHITE_LIST
-from tools.tools_method import write, read, delete
+from tools.tools_method import write, read, delete, time_now
 from tools.reports import Reports
 from tools.mail import mail
 from db.my_sql import MySql
@@ -99,7 +99,9 @@ class StoreSearchPageSpider(object):
             d = {
                 "shop_id": shop_id,
                 "total_page": 20,
-                "used_page_nums": "0"
+                "used_page_nums": "0",
+                "last_date": datetime.date.today(),
+                "spent_time": 0
             }
             #  插入数据后再重新获取
             ms.insert(t="tb_search_page_info", d=d)
