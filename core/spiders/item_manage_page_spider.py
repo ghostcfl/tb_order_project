@@ -72,7 +72,7 @@ class ItemManagePageSpider(BaseSpider):
             await asyncio.sleep(1)
             await self.listening(self.page)
             try:
-                await self.page.waitForSelector(FAST_EDIT_BTN)
+                await self.page.waitForSelector(FAST_EDIT_BTN, timout=10000)
                 await self.page.click(FAST_EDIT_BTN)
                 restart = await self.login.slider(self.page)
                 if restart:
@@ -121,7 +121,7 @@ class ItemManagePageSpider(BaseSpider):
         await self.goto_tb_item_page()
 
     async def goto_tb_item_page(self):
-        # await self.item_page.bringToFront()
+        await self.item_page.bringToFront()
         link_id = self.price_tb_items[0].link_id
         logger.info(link_id)
         base = r"https://item.taobao.com/item.htm"
@@ -136,7 +136,7 @@ class ItemManagePageSpider(BaseSpider):
                 if restart:
                     self.completed = 'exit'
             else:
-                await self.item_page.reload()
+                # await self.item_page.reload()
                 break
         while 1:
             if self.completed == 4:
