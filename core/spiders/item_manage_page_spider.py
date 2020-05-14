@@ -3,11 +3,12 @@ import json
 import asyncio
 from pyquery import PyQuery
 from jsonpath import jsonpath
+from pyppeteer import errors
 
 from settings import FAST_EDIT_BTN
 from core.spiders.base_spider import BaseSpider
 from tools.logger import logger
-from tools.tools_method import store_trans
+from tools.tools_method import store_trans, time_now
 from model import PriceTBItem
 from db.my_sql import MySql
 
@@ -53,7 +54,7 @@ class ItemManagePageSpider(BaseSpider):
 
         try:
             if not re.search("https://item.manager.taobao.com/taobao/manager/render.htm", self.page.url):
-                await self.page.goto("https://item.manager.taobao.com/taobao/manager/render.htm")
+                await self.page.goto("https://item.manager.taobao.com/taobao/manager/render.htm?tab=on_sale")
         except Exception as e:
             logger.error(str(e) + "manager_page_error")
             return
@@ -76,8 +77,13 @@ class ItemManagePageSpider(BaseSpider):
                 restart = await self.login.slider(self.page)
                 if restart:
                     exit("滑块验证码失败，退出")
-            except Exception as e:
-                str(e)
+            except errors.TimeoutError as e:
+                logger.info("商品已下架，没有查询到对应的商品ID：" + link_id)
+                ms.update(t="prices_tb", set={"SpiderDate": time_now(), "need_to_update": 0, "flag": "XiaJia"},
+                          c={"link_id": link_id})
+                link_id = ms.get_one(sql=sql)
+                if not link_id:
+                    return 0
                 continue
             else:
                 await self.page.focus("input[name='queryItemId']")
@@ -115,8 +121,9 @@ class ItemManagePageSpider(BaseSpider):
         await self.goto_tb_item_page()
 
     async def goto_tb_item_page(self):
-        await self.item_page.bringToFront()
+        # await self.item_page.bringToFront()
         link_id = self.price_tb_items[0].link_id
+        logger.info(link_id)
         base = r"https://item.taobao.com/item.htm"
         # self.item_page = await self.login.new_page()
         while 1:
@@ -129,6 +136,7 @@ class ItemManagePageSpider(BaseSpider):
                 if restart:
                     self.completed = 'exit'
             else:
+                await self.item_page.reload()
                 break
         while 1:
             if self.completed == 4:
