@@ -125,6 +125,7 @@ class StoreSearchPageSpider(object):
             while page_num:
                 curl = self._get_curls(shop_id)
                 if not curl:
+                    time.sleep(30)
                     continue
                 start_time = time.time()
                 delete(flag='tspi')
