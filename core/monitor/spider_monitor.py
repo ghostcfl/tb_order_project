@@ -26,6 +26,9 @@ async def run():
                 restart_signal = 1
                 break
         if restart_signal:
+            ms.update(t="spider_monitor",
+                      set={"restart_signal": 0},
+                      c={"spider_address": SPIDER_ADDRESS})
             restart()
         del ms
         await asyncio.sleep(60)
