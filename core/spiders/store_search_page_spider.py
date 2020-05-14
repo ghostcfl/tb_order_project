@@ -45,7 +45,10 @@ class StoreSearchPageSpider(object):
         results = MySql.cls_get_dict(db_setting=test_db, t="tb_search_curl", c={'shop_id': shop_id})
         for res in results:
             curls.append(res)
-        return random.choice(curls)
+        if curls:
+            return random.choice(curls)
+        else:
+            return 0
 
     @staticmethod
     def format_request_params(curl, page_num=2):
