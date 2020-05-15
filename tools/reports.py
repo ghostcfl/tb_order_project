@@ -18,11 +18,9 @@ class Reports(object):
     @staticmethod
     def init_receivers():
         receivers = MAIL_RECEIVERS.copy()
-        # mail_receivers_ky = receivers
-        # mail_receivers_yk = receivers
-        # mail_receivers_yj = receivers
-        # mail_receivers_tb = receivers
         receivers.append("szjavali@qq.com")
+        receivers.append("104684637@qq.com")
+        receivers.append("myzhiheng@163.com")
         mail_receivers_ky = receivers.copy()
         mail_receivers_yk = receivers.copy()
         mail_receivers_yj = receivers.copy()
