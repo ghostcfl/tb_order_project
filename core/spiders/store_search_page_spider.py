@@ -170,6 +170,9 @@ class StoreSearchPageSpider(object):
             MySql.cls_update(db_setting=test_db, sql=sql)
         reports = Reports()
         reports.report([ids for ids in self._get_shop_id()])
+        ms = MySql(db_setting=test_db)
+        t = TBMasterItem()
+        t.save_to_record(ms)
 
     def parse(self):
         for html, shop_id, used_page_nums, total_page, page_num in self._get_html():
