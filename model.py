@@ -2,6 +2,7 @@ import abc
 from datetime import date
 
 from tools.tools_method import time_now, time_ago
+from db.my_sql import MySql
 
 
 class BaseItem(abc.ABC):
@@ -195,7 +196,7 @@ class TBMasterItem(BaseItem):
         condition = {"link_id": self.link_id}
         return condition
 
-    def save(self, ms):
+    def save(self, ms, ms_prod):
         data = self._pop_null_value()
         res = ms.get_dict(t=self._table_name(), c=self._condition())
         flag = ["update"]
@@ -216,6 +217,18 @@ class TBMasterItem(BaseItem):
             data['flag'] = "_".join(flag)
             data['narrative'] = ";".join(narrative)
             ms.update(t=self._table_name(), set=data, c=self._condition())
+            if res[0]['isMut'] == 0:
+                MySql.cls_update(
+                    t="prices_tb",
+                    c={"link_id": data["link_id"]},
+                    set={
+                        "price_tb": data["price_tb"],
+                        "SpiderDate": time_now(),
+                        "description": data["description"],
+                        "promotionprice": data["promotionprice"],
+                        "sales": data["sales"],
+                        "rates": data["rates"]
+                    })
         else:
             data['flag'] = 'insert'
             ms.insert(t=self._table_name(), d=data)
@@ -240,6 +253,7 @@ class TBMasterItem(BaseItem):
 if __name__ == '__main__':
     from db.my_sql import MySql
     from settings import TEST_SERVER_DB_TEST
+
     ms = MySql(db_setting=TEST_SERVER_DB_TEST)
     t = TBMasterItem()
     t.save_to_record(ms)

@@ -200,6 +200,7 @@ class StoreSearchPageSpider(object):
 
             items = doc("." + match.group() + " dl.item").items()
             ms = MySql(db_setting=test_db)
+            ms_prod = MySql()
             for i in items:
                 tb_master_item = TBMasterItem()
                 tb_master_item.shop_id = shop_id
@@ -222,8 +223,8 @@ class StoreSearchPageSpider(object):
                     tb_master_item.promotionprice = sprice
 
                 print(tb_master_item)
-                tb_master_item.save(ms)
-            del ms
+                tb_master_item.save(ms, ms_prod)
+            del ms, ms_prod
 
     @classmethod
     def run(cls):
