@@ -127,6 +127,7 @@ class StoreSearchPageSpider(object):
             page_num, used_page_nums, total_page, sp_time = self._get_page_num(shop_id)
             session = requests.Session()
             while page_num:
+                time.sleep(2)
                 curl = self._get_curls(shop_id)
                 if not curl:
                     time.sleep(30)
