@@ -49,7 +49,7 @@ class StoreItemPageSpider(object):
 
     @staticmethod
     def _set_proxy():
-        time.sleep(2)
+        my_sleep(2)
         r = requests.get(NOT_FREE_PROXY_API)
         proxy = re.sub("\s+", "", r.text)  # 获得代理IP
         match = re.match("^\d+\.\d+\.\d+\.\d+:\d+$", proxy)  # 检测返回的数据是否正确
