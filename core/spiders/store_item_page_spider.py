@@ -1,14 +1,13 @@
 import requests
 import re
 import json
-import time
 import asyncio
 import subprocess
 from pyppeteer import errors
 from pyppeteer import launch
 from pyquery import PyQuery
 
-from tools.tools_method import write, read, time_now, store_trans, time_ago
+from tools.tools_method import write, read, time_now, store_trans, time_ago,my_sleep
 from tools.kill_pyppeteer_temp_file import kill_temp_file
 from tools.request_headers import get_user_agent
 from tools.logger import logger
@@ -94,7 +93,8 @@ class StoreItemPageSpider(object):
                 results[0]['typeabbrev'] = store_trans(results[0]['shop_id'], 'id_2_code')
                 return results[0]
             else:
-                time.sleep(60)
+                logger.info('没有数据需要爬取！')
+                my_sleep()
 
     async def init_page_to_listening(self):
         # 获取存储在tools/data里的ip代理
