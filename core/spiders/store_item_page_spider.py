@@ -11,8 +11,10 @@ from tools.tools_method import write, read, time_now, store_trans, time_ago
 from tools.kill_pyppeteer_temp_file import kill_temp_file
 from tools.request_headers import get_user_agent
 from tools.logger import logger
-from settings import TEST_SERVER_DB_TEST, NOT_FREE_PROXY_API, CHROME_PATH,IP_PROXY_WHITE_LIST
+from settings import TEST_SERVER_DB_TEST, NOT_FREE_PROXY_API, CHROME_PATH, IP_PROXY_WHITE_LIST
 from db.my_sql import MySql
+
+proxy_switch = True
 
 
 class StoreItemPageSpider(object):
@@ -48,6 +50,7 @@ class StoreItemPageSpider(object):
 
     @staticmethod
     def _set_proxy():
+        time.sleep(2)
         r = requests.get(NOT_FREE_PROXY_API)
         proxy = re.sub("\s+", "", r.text)  # 获得代理IP
         match = re.match("^\d+\.\d+\.\d+\.\d+:\d+$", proxy)  # 检测返回的数据是否正确
@@ -80,26 +83,30 @@ class StoreItemPageSpider(object):
             "sales",
             "rates",
         ]
-        results = MySql.cls_get_dict(db_setting=TEST_SERVER_DB_TEST,
-                                     t="tb_master",
-                                     c={"isUsed": 0, "isMut": 1, "flag!": "XiaJia"},
-                                     cn=column_name, l=["0", "1"])
-        if results:
-            results[0]['price_tb'] = float(results[0]['price_tb'])
-            results[0]['promotionprice'] = float(results[0]['promotionprice'])
-            results[0]['typeabbrev'] = store_trans(results[0]['shop_id'], 'id_2_code')
-            return results[0]
-        else:
-            exit("已经完成所有的爬取")
+        while 1:
+            results = MySql.cls_get_dict(db_setting=TEST_SERVER_DB_TEST,
+                                         t="tb_master",
+                                         c={"isUsed": 0, "isMut": 1, "flag!": "XiaJia"},
+                                         cn=column_name, l=["0", "1"])
+            if results:
+                results[0]['price_tb'] = float(results[0]['price_tb'])
+                results[0]['promotionprice'] = float(results[0]['promotionprice'])
+                results[0]['typeabbrev'] = store_trans(results[0]['shop_id'], 'id_2_code')
+                return results[0]
+            else:
+                time.sleep(60)
 
     async def init_page_to_listening(self):
         # 获取存储在tools/data里的ip代理
-        proxy = read('item_proxy')
-        if not proxy:
-            proxy = self._set_proxy()
-        logger.info("当前代理IP：" + proxy)
-        # 获取一个使用代理的浏览器
-        self._browser = await launch(headless=True, executablePath=CHROME_PATH, args=[f'--proxy-server={proxy}'])
+        if proxy_switch:
+            proxy = read('item_proxy')
+            if not proxy:
+                proxy = self._set_proxy()
+            logger.info("当前代理IP：" + proxy)
+            # 获取一个使用代理的浏览器
+            self._browser = await launch(headless=True, executablePath=CHROME_PATH, args=[f'--proxy-server={proxy}'])
+        else:
+            self._browser = await launch(headless=True, executablePath=CHROME_PATH)
         # self._browser = await launch(autoClose=False, headless=False, args=[f'--proxy-server={proxy}'])
         # 获取一个浏览器的page对象
         self._page = await self._browser.newPage()
@@ -114,7 +121,8 @@ class StoreItemPageSpider(object):
         except errors.TimeoutError:
             pass
         except errors.PageError:
-            self._set_proxy()
+            if proxy_switch:
+                self._set_proxy()
             return
         while self.exit_signal:
             await asyncio.sleep(50)
@@ -186,7 +194,8 @@ class StoreItemPageSpider(object):
                 self.exit_signal = 0
                 return
             except errors.PageError:
-                self._set_proxy()
+                if proxy_switch:
+                    self._set_proxy()
                 self.exit_signal = 0
                 return
             else:

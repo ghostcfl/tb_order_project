@@ -213,12 +213,14 @@ class TBMasterItem(BaseItem):
                 narrative.append("更新销量:[{}]=>[{}]".format(res[0]['sales'], data['sales']))
             if res[0]['flag'] == 'XiaJia':
                 flag.append("ShangJia")
+                data['isUsed'] = 0
+                data['isMut'] = 1
                 narrative.append("下架商品重新上架")
             data['flag'] = "_".join(flag)
             data['narrative'] = ";".join(narrative)
             ms.update(t=self._table_name(), set=data, c=self._condition())
             if res[0]['isMut'] == 0:
-                MySql.cls_update(
+                ms_prod.update(
                     t="prices_tb",
                     c={"link_id": data["link_id"]},
                     set={
