@@ -1,6 +1,7 @@
 import requests
 import re
 import json
+import time
 import asyncio
 import subprocess
 from pyppeteer import errors
@@ -12,9 +13,8 @@ from tools.kill_pyppeteer_temp_file import kill_temp_file
 from tools.request_headers import get_user_agent
 from tools.logger import logger
 from settings import TEST_SERVER_DB_TEST, NOT_FREE_PROXY_API, CHROME_PATH, IP_PROXY_WHITE_LIST
+from settings import PROXY_SWITCH
 from db.my_sql import MySql
-
-proxy_switch = True
 
 
 class StoreItemPageSpider(object):
@@ -98,7 +98,7 @@ class StoreItemPageSpider(object):
 
     async def init_page_to_listening(self):
         # 获取存储在tools/data里的ip代理
-        if proxy_switch:
+        if PROXY_SWITCH:
             proxy = read('item_proxy')
             if not proxy:
                 proxy = self._set_proxy()
@@ -121,7 +121,7 @@ class StoreItemPageSpider(object):
         except errors.TimeoutError:
             pass
         except errors.PageError:
-            if proxy_switch:
+            if PROXY_SWITCH:
                 self._set_proxy()
             return
         while self.exit_signal:
@@ -194,7 +194,7 @@ class StoreItemPageSpider(object):
                 self.exit_signal = 0
                 return
             except errors.PageError:
-                if proxy_switch:
+                if PROXY_SWITCH:
                     self._set_proxy()
                 self.exit_signal = 0
                 return
