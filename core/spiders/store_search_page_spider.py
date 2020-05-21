@@ -6,6 +6,7 @@ import time
 from pyquery import PyQuery
 
 from settings import NOT_FREE_PROXY_API, TEST_SERVER_DB_TEST as test_db, IP_PROXY_WHITE_LIST
+from settings import SEARCH_PAGE_REPORT, SEARCH_PAGE_SHOP_TO_SPIDER
 from tools.tools_method import write, read, delete, time_now
 from tools.reports import Reports
 from tools.mail import mail
@@ -84,10 +85,8 @@ class StoreSearchPageSpider(object):
 
     @staticmethod
     def _get_shop_id():
-        sql = "select shop_id from shop_info where shop_id!='88888888'"  # 获取所有的店铺ID
-        shop_infos = MySql.cls_get_dict(sql=sql)
-        for shop_info in shop_infos:
-            yield shop_info['shop_id']
+        for shop_id in SEARCH_PAGE_SHOP_TO_SPIDER:
+            yield shop_id
 
     @staticmethod
     def _get_page_num(shop_id):
@@ -168,11 +167,13 @@ class StoreSearchPageSpider(object):
             sql = "UPDATE tb_master SET flag='XiaJia',update_date='{}' WHERE shop_id='{}' AND update_date<'{}'".format(
                 datetime.date.today(), shop_id, datetime.date.today())
             MySql.cls_update(db_setting=test_db, sql=sql)
-        reports = Reports()
-        reports.report([ids for ids in self._get_shop_id()])
-        ms = MySql(db_setting=test_db)
-        t = TBMasterItem()
-        t.save_to_record(ms)
+
+        if SEARCH_PAGE_REPORT:
+            reports = Reports()
+            reports.report([ids for ids in self._get_shop_id()])
+            ms = MySql(db_setting=test_db)
+            t = TBMasterItem()
+            t.save_to_record(ms)
 
     def parse(self):
         for html, shop_id, used_page_nums, total_page, page_num in self._get_html():
