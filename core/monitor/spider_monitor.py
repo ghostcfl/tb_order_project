@@ -1,5 +1,6 @@
 import asyncio
 import subprocess
+from subprocess import check_output
 
 from db.my_sql import MySql
 from settings import TEST_SERVER_DB_TEST, SPIDER_ADDRESS, MAIL_RECEIVERS
@@ -10,6 +11,7 @@ from tools.mail import mail
 
 async def run():
     while 1:
+        update()
         ms = MySql(db_setting=TEST_SERVER_DB_TEST)
         ms.update(t="spider_monitor",
                   set={"latest_time": time_now()},
@@ -32,6 +34,17 @@ async def run():
             restart()
         del ms
         await asyncio.sleep(60)
+
+
+def update():
+    ms = MySql(db_setting=TEST_SERVER_DB_TEST)
+    update_signals = ms.get_dict(t="spider_monitor", cn=["spider_address", "update_signal"])
+    for update_signal in update_signals:
+        if update_signal['update_signal']:
+            result = check_output(['git', 'pull'])
+            ms.update(t='spider_monitor',
+                      set={"update_signal": 0, "update_result": result.decode('utf-8').strip()},
+                      c={"spider_address": update_signal['spider_address']})
 
 
 def restart():
