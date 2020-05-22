@@ -4,7 +4,7 @@ from email.header import Header
 from email.mime.multipart import MIMEMultipart
 from email.mime.image import MIMEImage
 
-from settings import MAIL_SENDER, MAIL_PASS, MAIL_RECEIVERS
+from settings import MAIL_SENDER, MAIL_PASS
 from tools.logger import logger
 
 
