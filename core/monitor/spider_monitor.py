@@ -62,5 +62,4 @@ def restart():
 
 
 if __name__ == '__main__':
-    # restart()
     asyncio.run(run())
