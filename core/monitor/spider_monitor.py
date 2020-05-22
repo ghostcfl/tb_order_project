@@ -41,10 +41,11 @@ def update():
     update_signals = ms.get_dict(t="spider_monitor", cn=["spider_address", "update_signal"])
     for update_signal in update_signals:
         if update_signal['update_signal']:
-            result = check_output(['git', 'pull'])
-            ms.update(t='spider_monitor',
-                      set={"update_signal": 0, "update_result": result.decode('utf-8').strip()},
-                      c={"spider_address": update_signal['spider_address']})
+            if SPIDER_ADDRESS == update_signal['spider_address']:
+                result = check_output(['git', 'pull'])
+                ms.update(t='spider_monitor',
+                          set={"update_signal": 0, "update_result": result.decode('utf-8').strip()},
+                          c={"spider_address": SPIDER_ADDRESS})
 
 
 def restart():
